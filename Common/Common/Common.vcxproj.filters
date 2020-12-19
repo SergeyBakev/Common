@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Arrays">
+      <UniqueIdentifier>{fd2f0215-13af-492d-8edd-c5d5ee8e3dc4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -20,6 +23,15 @@
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Arrays\ke_array_indexer.h">
+      <Filter>Arrays</Filter>
+    </ClInclude>
+    <ClInclude Include="Arrays\ke_farray.h">
+      <Filter>Arrays</Filter>
+    </ClInclude>
+    <ClInclude Include="Arrays\ke_farray_base.h">
+      <Filter>Arrays</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
