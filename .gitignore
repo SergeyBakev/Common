@@ -70,6 +70,7 @@
 *.pidb
 *.svclog
 *.scc
+*.tlog
 
 # Visual C++ cache files
 ipch/
