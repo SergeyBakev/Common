@@ -36,3 +36,4 @@
 *.db-shm
 *.db
 *.pdb
+*.suo
