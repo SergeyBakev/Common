@@ -23,13 +23,12 @@ namespace BenchMarksFArray
 		{
 			double data = (double)state.range_x();
 			benchmark::DoNotOptimize(data);
-			_fs.write((const char*)&data, sizeof(data));
+			_fs.write(reinterpret_cast<char*>(&data), sizeof(data));
 		}
 	}
 
 	void AddOneDoubleElementAtFArray(benchmark::State& state)
-	{
-		
+	{	
 		while (state.KeepRunning())
 		{
 			double data = (double)state.range_x();
@@ -38,6 +37,13 @@ namespace BenchMarksFArray
 		}
 	}
 
+	void GetElementAtIndexFormVector(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+
+		}
+	}
 	BENCHMARK(PushBackOneDoubleElementAtVector)->Arg(ITER);
 	BENCHMARK(WriteOneDoubleElementAtFile)->Arg(ITER);
 	BENCHMARK(AddOneDoubleElementAtFArray)->Arg(ITER);
@@ -45,6 +51,7 @@ namespace BenchMarksFArray
 
 int main(int argc, char** argv)
 {
+
 	using namespace BenchMarksFArray;
 
 	std::wstring file_name;

@@ -64,12 +64,12 @@ public:
 	using index_type = typename typename IndexMapper::external_idx_type;
 	using inner_index_type = typename typename IndexMapper::inner_idx_type;
 	using IndexerType = IndexMapper;
+
 	FArrayBase()
 	{
 		std::wstring fileName = CreateTemoraryFileName();
 		if (!CreateNew(fileName.c_str(), true))
 			throw std::exception();
-
 	}
 
 	FArrayBase(object_size size) : FArrayBase()
@@ -109,16 +109,15 @@ public:
 		return false;
 	}
 
-	index_type Add(void* value)
+	inline void Add(void* value)
 	{
 		return Add(value, _buffer_size);
 	}
 
-	index_type Add(void* value, object_size size)
+	void Add(void* value, object_size size)
 	{
-		index_type idx = _mapper.CreateNewIndex();
-		_ReplaceAtOrAdd(idx, value, size);
-		return idx;
+		_mapper.Insert(_mapper.CreateNewIndex());
+		_Add(value, size);
 	}
 
 	void SetAt(const index_type& idx, void* object)
@@ -219,6 +218,8 @@ public:
 		
 		storage.write(reinterpret_cast<const char*>(&length), sizeof(length));
 		storage.write(reinterpret_cast<const char*>(&_buffer_size), sizeof(_buffer_size));
+		storage.write(reinterpret_cast<const char*>(&_end_pos), sizeof(_end_pos));
+		storage.write(reinterpret_cast<const char*>(&_current_putpos), sizeof(_current_putpos));
 		_fs.seekg(std::ios::beg);
 	
 		const size_t blockSize = 4096;
@@ -246,7 +247,8 @@ public:
 		
 		storage.read(reinterpret_cast<char*>(&length), sizeof(length));
 		storage.read(reinterpret_cast<char*>(&_buffer_size), sizeof(_buffer_size));
-
+		storage.read(reinterpret_cast<char*>(&_end_pos), sizeof(_end_pos));
+		storage.read(reinterpret_cast<char*>(&_current_putpos), sizeof(_current_putpos));
 		const size_t blockSize = 4096;
 		char data[blockSize] = { 0 };
 		for (size_t i = 0; i < length / blockSize; ++i)
@@ -271,7 +273,9 @@ protected:
 
 	IndexMapper _mapper;
 	object_size _buffer_size = 0;
-	mutable size_t _current_pos = 0;
+	mutable std::streamoff _current_putpos = 0;
+	mutable bool _need_flush = false;
+	mutable std::streamoff _end_pos = 0;
 	mutable std::fstream _fs;
 
 #ifdef UNICODE
@@ -318,41 +322,74 @@ protected:
 	void _ReplaceAtOrAdd(index_type external_idx, void* value, object_size size)
 	{
 		_ASSERT(size != 0);
-		_fs.sync();
 		if (!Contains(external_idx))
 		{
 			_mapper.Insert(external_idx);
 			_Add(value, size);
 			return;
 		}
-		inner_index_type index = _mapper.GetRealIndex(external_idx);
-		std::streampos seekg_size = index * size;
-		_fs.seekp(seekg_size, std::ios::beg);
-		_fs.write(reinterpret_cast<const char*>(value), size);
-		_current_pos = index + 1;
-	}
 
-	void _GetAt(const index_type& index, void* value, object_size size) const
-	{
-		_ASSERT(size != 0);
-		std::streampos seekg_size = index * size;
-		_fs.seekg(seekg_size, std::ios::beg);
-		_fs.read(reinterpret_cast<char*>(value), size);
+		if (_need_flush)
+			_fs.flush();
+		auto t = _fs.tellp();
+		inner_index_type index = _mapper.GetRealIndex(external_idx);
+
+		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);
+		std::streamoff seek = sizeoffset - _current_putpos;
+
+		
+		_fs.seekp(seek, std::ios::cur);
 
 #ifdef _DEBUG
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");
 #endif // DEBUG	
+		_fs.write(reinterpret_cast<const char*>(value), size);
 
-		_current_pos = index + 1;
+		auto t2 = _fs.tellp();
+
+		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
+
+
+	}
+
+	void _GetAt(const index_type& index, void* value, object_size size) const
+	{
+		if (_need_flush)
+		{
+			_fs.flush();
+			_fs.sync();
+			_need_flush = false;
+		}
+
+		_ASSERT(size != 0);
+		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);
+		std::streamoff seek = sizeoffset - _current_putpos;
+		_fs.seekg(seek, std::ios::cur);
+
+#ifdef _DEBUG
+		if (_fs.fail())
+			throw std::exception("Stream has invalid state");
+#endif // DEBUG	
+		_fs.read(reinterpret_cast<char*>(value), size);
+		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
 	}
 
 	void _Add(void* value, object_size size)
 	{
 		_ASSERT(size != 0);
-		_fs.seekp(0, std::ios::end);
-		_fs.write(reinterpret_cast<char*>(value), size);
+		
+		if(_end_pos != _current_putpos)
+		{
+			size_t seek_size = _end_pos - _current_putpos;
+			_ASSERT(seek_size > 0);
+			_fs.seekp(static_cast<std::streamoff>(seek_size), std::ios::cur);
+		}
+		_end_pos += size;
+		_current_putpos = _end_pos;
 
+		_fs.write(reinterpret_cast<char*>(value), size);
+		_need_flush = true;
 #ifdef _DEBUG
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");

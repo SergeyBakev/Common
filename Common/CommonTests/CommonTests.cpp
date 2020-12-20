@@ -10,7 +10,7 @@ namespace CommonTests
 	public:
 		
 		static constexpr size_t SIZE = 1000;
-		static constexpr size_t ELEMENT_SIZE = 15; //Для тестирования будет использоваться вектор из 15 double
+		static constexpr size_t ELEMENT_SIZE = 26; //Для тестирования будет использоваться вектор из 15 double
 		static std::vector<std::vector<double>> expected;
 		static std::vector<size_t> random_unique_indexes;
 
@@ -274,6 +274,120 @@ namespace CommonTests
 			}
 		}
 
+
+		//С это проблемой я столкнулся сразу же при внедрении в CFD/Stress
+		//Результати загружались поэтапно. То есть допустим index = 5, сначала в data[26] записывались по индексам(допустим 1-5). После чего обратно сохранялось в массив по index
+		//После чего в какой то момент доставался элемент index и данные дозаписывались(допустим) (6-10). По какой то причние я уменя сбоило. Причину точно уже не помню
+		TEST_METHOD(Add_Element_Data_Patrial)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<std::vector<double>> actual(SIZE);
+			std::vector<double> vec(ELEMENT_SIZE);
+			std::vector<double> vec1(ELEMENT_SIZE);
+
+			//act
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				for (size_t j = 0; j < 5; j++)
+					vec1[j] = expected[i][j];
+
+				ar.SetAt(i, vec1.data());
+			}
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+				for (size_t j = 5; j < 10; j++)
+					vec[j] = expected[i][j];
+
+				
+				ar.SetAt(i, vec.data());
+			}
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+				for (size_t j = 10; j < 15; j++)
+					vec[j] = expected[i][j];
+
+				ar.SetAt(i, vec.data());
+			}
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+				for (size_t j = 15; j < 20; j++)
+					vec[j] = expected[i][j];
+
+				ar.SetAt(i, vec.data());
+			}
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+				for (size_t j = 20; j < 26; j++)
+					vec[j] = expected[i][j];
+
+				ar.SetAt(i, vec.data());
+			}
+
+
+			//assert
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				auto& act_val = expected[i ];
+				ar.GetAt(i, vec.data());
+				auto& expected_val = vec;
+
+				Assert::IsTrue(expected_val == act_val);
+			}
+
+		}
+
+
+		TEST_METHOD(Serialize_Deserialize_Arr)
+		{
+			//arrange
+			FArrayBase arExpected;
+			FArrayBase arActual;
+			arActual.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			arExpected.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<std::vector<double>> actual;
+			std::vector<double> vec(ELEMENT_SIZE);
+			std::vector<double> vec2(ELEMENT_SIZE);
+
+			AddArrayElementFromExpectedVector(arActual);
+
+			std::string file_name = "arr.bin";
+
+			std::ofstream fsSave;
+			fsSave.open(file_name, std::ios::out | std::ios::binary);
+			if (!fsSave.is_open())
+				throw std::exception();
+
+			std::ifstream fsLoad;
+			//act
+			arActual.Serialize(fsSave);
+			fsSave.close();
+
+			fsLoad.open(file_name, std::ios::in | std::ios::binary);
+			if (!fsLoad.is_open())
+				throw std::exception();
+			arExpected.Deserialize(fsLoad);
+
+			//assert
+			Assert::AreEqual(arExpected.Count(), arActual.Count());
+			for (size_t i = 0; i < arExpected.Count(); i++)
+			{
+				arActual.GetAt(i, vec.data());
+				arExpected.GetAt(i, vec2.data());
+				Assert::IsTrue(vec == vec2);
+			}
+
+			std::remove(file_name.c_str());
+		}
 	};
 
 	std::vector<std::vector<double>> FArrayBaseTest::expected;
