@@ -56,14 +56,20 @@ private:
 	}
 };
 
+template<class IndexMapper> class FArrayBaseProxyObject;
+
 template <class IndexMapper = SparseIndexMapper>
 class FArrayBase
 {
+	
+
 public:
 	using object_size = size_t;
-	using index_type = typename typename IndexMapper::external_idx_type;
-	using inner_index_type = typename typename IndexMapper::inner_idx_type;
+	using index_type = typename IndexMapper::external_idx_type;
+	using inner_index_type = typename IndexMapper::inner_idx_type;
 	using IndexerType = IndexMapper;
+
+	using iterator = FArrayBaseProxyObject<IndexMapper>;
 
 	FArrayBase()
 	{
@@ -133,13 +139,8 @@ public:
 	void GetAt(const index_type& index, void* object) const
 	{
 		if (!Contains(index))
-		{
-#ifdef _DEBUG
 			throw std::out_of_range("Invalid index");
-#else
-			return;
-#endif // _DEBUG
-		}
+		
 		return _GetAt(_mapper.GetRealIndex(index), object, _buffer_size);
 	}
 
@@ -164,12 +165,9 @@ public:
 
 	}
 
-	size_t Count() const noexcept { return _mapper.GetCount(); }
+	inline size_t Count() const noexcept { return _mapper.GetCount(); }
 
-	object_size GetObjectSize()const
-	{
-		return _buffer_size;
-	}
+	object_size GetObjectSize()const{return _buffer_size;}
 
 	void SetObjectSize(object_size size)
 	{
@@ -262,6 +260,11 @@ public:
 			storage.read(data, length);
 			_fs.write(data, length);
 		}	
+	}
+
+	FArrayBaseProxyObject<IndexMapper> begin()
+	{
+		return FArrayBaseProxyObject<IndexMapper>(_mapper.GetFirst(),this);
 	}
 
 	~FArrayBase()
@@ -395,4 +398,65 @@ protected:
 			throw std::exception("Stream has invalid state");
 #endif // DEBUG	
 	}
+};
+
+template<class IndexMapper>
+class FArrayBaseProxyObject
+{
+public:
+	template <class Indexer> friend class FArrayBase;
+	using index_type = typename IndexMapper::external_idx_type;
+	using inner_index_type = typename IndexMapper::inner_idx_type;
+	
+	struct MemoryDeleter{void operator()(void* mem) { free(mem); }};
+
+private:
+
+	template <class IndexMapper>
+	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr) :
+		_arr(arr), _idx(idx)
+	{
+		_buffer.reset(malloc(_arr->GetObjectSize()));
+	}
+
+public:
+	FArrayBaseProxyObject() = delete;
+
+	FArrayBaseProxyObject(FArrayBaseProxyObject&& other)
+		: _buffer(std::move(other._buffer)),
+		_arr(other._arr),
+		_idx(other._idx)
+	{
+
+	}
+
+	void* operator*()
+	{
+#ifdef _DEBUG
+		_ASSERT(_idx >= 0 && _idx != IndexMapper::npos);
+		_ASSERT(_idx < _arr->Count());
+#endif 
+		_arr->GetAt(_idx, _buffer.get());
+		return _buffer.get();
+	}
+	
+	void* operator*() const
+	{
+#ifdef _DEBUG
+		_ASSERT(_idx >= 0 && _idx != IndexMapper::npos );
+		_ASSERT(_idx < _arr->Count());
+#endif 
+		_arr->GetAt(_idx, _buffer.get());
+		return _buffer.get();
+	}
+	template <typename Type>
+	Type* Get() const
+	{
+		return (Type*)this->operator*();
+	}
+
+private:
+	std::unique_ptr<void, MemoryDeleter> _buffer;
+	FArrayBase<IndexMapper>* _arr;
+	index_type _idx;
 };

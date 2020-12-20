@@ -63,7 +63,9 @@ int main(int argc, char** argv)
 	_fs.open(file_name, mode);
 	if (!_fs.is_open())
 		throw std::exception();
-
+	std::vector<double> v;
+	auto it = v.begin();
+	auto el = *it;
 	::benchmark::Initialize(&argc, argv);
 	::benchmark::RunSpecifiedBenchmarks();
 }

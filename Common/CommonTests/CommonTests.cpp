@@ -388,6 +388,35 @@ namespace CommonTests
 
 			std::remove(file_name.c_str());
 		}
+
+
+		//— данной проблемой € столкнулс€ при очистики масива, но при этому не сбрасыва€ индексы
+		TEST_METHOD(Add_Element_Clear_Array_And_Try_Get)
+		{
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<std::vector<double>> actual(SIZE);
+			AddArrayElementFromExpectedVector(ar);
+
+			//act
+			ar.Clear();
+			auto func = [&]() {ar.GetAt(0, actual.data()); };
+			Assert::ExpectException<std::out_of_range>(func);
+		}
+
+		TEST_METHOD(Get_Begin_Iterator)
+		{
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<double> expected_vec = expected[0];
+			ar.Add(expected_vec.data());
+
+			auto it = ar.begin();
+			auto elem = it.Get<double>();
+			std::vector<double> actual(elem, elem + ELEMENT_SIZE);
+
+			Assert::IsTrue(expected_vec == actual);
+		}
 	};
 
 	std::vector<std::vector<double>> FArrayBaseTest::expected;

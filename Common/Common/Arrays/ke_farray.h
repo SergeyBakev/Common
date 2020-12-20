@@ -104,7 +104,6 @@ protected:
 
 public:
 
-	FArrayObject() = default;
 	FArrayObject(const FArrayObject& other) = default;
 	FArrayObject(FArrayObject&& other) = default;
 

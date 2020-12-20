@@ -8,9 +8,9 @@ public:
 	using external_idx_type = ExternalIndexType;
 	using inner_idx_type = InnerIndexType;
 
-	inline static const inner_idx_type npos = static_cast<InnerIndexType>(-1);
-	inline static const external_idx_type eof = static_cast<ExternalIndexType>(-1);
-	inline static  const external_idx_type StartIndex = 0;
+	inline static constexpr inner_idx_type npos = static_cast<InnerIndexType>(-1);
+	inline static constexpr external_idx_type eof = static_cast<ExternalIndexType>(-1);
+	inline static  constexpr external_idx_type StartIndex = 0;
 
 public:
 
@@ -147,7 +147,7 @@ public:
 	external_idx_type GetFirst() const
 	{
 		if (IsEmpty())
-			return StartIndex;
+			return npos;
 
 		return inner_index_to_external.begin()->first;
 	}
