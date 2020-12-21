@@ -41,12 +41,40 @@ namespace BenchMarksFArray
 	{
 		while (state.KeepRunning())
 		{
+			auto& data = vec[state.range_x()];
+			benchmark::DoNotOptimize(data);
+		}
+	}
+	
 
+	void GetElementAtIndexFormStream(benchmark::State& state)
+	{
+		double data;
+		while (state.KeepRunning())
+		{
+			_fs.read((char*)&data, sizeof(data));
+			benchmark::DoNotOptimize(data);
+		}
+	}
+
+
+	void GetElementAtIndexFormFArray(benchmark::State& state)
+	{
+		double data;
+		while (state.KeepRunning())
+		{
+			ar.GetAt(state.range_x(), &data);
+			benchmark::DoNotOptimize(data);
 		}
 	}
 	BENCHMARK(PushBackOneDoubleElementAtVector)->Arg(ITER);
 	BENCHMARK(WriteOneDoubleElementAtFile)->Arg(ITER);
 	BENCHMARK(AddOneDoubleElementAtFArray)->Arg(ITER);
+
+	BENCHMARK(GetElementAtIndexFormVector)->Arg(ITER);
+	BENCHMARK(GetElementAtIndexFormStream)->Arg(ITER);
+	BENCHMARK(GetElementAtIndexFormFArray)->Arg(ITER);
+
 }
 
 int main(int argc, char** argv)
@@ -64,8 +92,6 @@ int main(int argc, char** argv)
 	if (!_fs.is_open())
 		throw std::exception();
 	std::vector<double> v;
-	auto it = v.begin();
-	auto el = *it;
 	::benchmark::Initialize(&argc, argv);
 	::benchmark::RunSpecifiedBenchmarks();
 }

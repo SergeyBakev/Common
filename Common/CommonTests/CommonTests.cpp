@@ -274,7 +274,53 @@ namespace CommonTests
 			}
 		}
 
+		TEST_METHOD(Set_Get_Element)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<std::vector<double>> actual;
+			std::vector<std::vector<double>> expected_vec;
+			std::vector<double> vec(ELEMENT_SIZE);
 
+			//act
+			ar.Add(expected[0].data());
+			ar.Add(expected[1].data());
+
+
+			expected_vec.push_back(expected[0]);
+			expected_vec.push_back(expected[1]);
+
+			for (size_t i = 2; i < SIZE; i++)
+			{
+				ar.SetAt(i-1, expected[i-2].data());
+				ar.SetAt(i-2, expected[i-1].data());
+
+				ar.GetAt(i-1,vec.data());
+				actual.push_back(vec);
+
+				ar.GetAt(i-2,vec.data());
+				actual.push_back(vec);
+
+				ar.Add(expected[i].data());
+
+				expected_vec[i - 1] = expected[i-2];
+				expected_vec[i - 2] = expected[i-1];
+
+
+				expected_vec.push_back(expected[i]);
+			}
+
+			//assert
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				auto& act_val = expected[i];
+				ar.GetAt(i, vec.data());
+				auto& expected_val = vec;
+
+				Assert::IsTrue(expected_val == act_val);
+			}
+		}
 		//С это проблемой я столкнулся сразу же при внедрении в CFD/Stress
 		//Результати загружались поэтапно. То есть допустим index = 5, сначала в data[26] записывались по индексам(допустим 1-5). После чего обратно сохранялось в массив по index
 		//После чего в какой то момент доставался элемент index и данные дозаписывались(допустим) (6-10). По какой то причние я уменя сбоило. Причину точно уже не помню

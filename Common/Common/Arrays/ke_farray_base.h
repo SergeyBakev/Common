@@ -333,7 +333,11 @@ protected:
 		}
 
 		if (_need_flush)
+		{
 			_fs.flush();
+			_need_flush = false;
+		}
+			
 		auto t = _fs.tellp();
 		inner_index_type index = _mapper.GetRealIndex(external_idx);
 
@@ -361,14 +365,15 @@ protected:
 		if (_need_flush)
 		{
 			_fs.flush();
-			_fs.sync();
 			_need_flush = false;
 		}
 
 		_ASSERT(size != 0);
 		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);
 		std::streamoff seek = sizeoffset - _current_putpos;
-		_fs.seekg(seek, std::ios::cur);
+		
+		if(seek != static_cast<std::streamoff>(0))
+			_fs.seekg(seek, std::ios::cur);
 
 #ifdef _DEBUG
 		if (_fs.fail())
