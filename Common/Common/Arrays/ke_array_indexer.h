@@ -9,119 +9,76 @@ public:
 	using inner_idx_type = InnerIndexType;
 
 	inline static constexpr inner_idx_type npos = static_cast<InnerIndexType>(-1);
-	inline static constexpr external_idx_type eof = static_cast<ExternalIndexType>(-1);
-	inline static  constexpr external_idx_type StartIndex = 0;
-
-public:
-
-	bool IsEmpty() const
-	{
-		return This()->GetCount() == 0;
-	}
-
-	external_idx_type CreateNewIndex() const
-	{
-		auto index = This()->GetLast();
-		return index == npos ? StartIndex : ++index;
-	}
-#ifdef MFC
-
-	void Serialize(CArchive& ar)
-	{
-		uint64_t size = inner_index_to_external.size();
-		ar << size;
-		for (auto& [ext_idx, in_idx] : inner_index_to_external)
-		{
-			uint64_t idx1 = static_cast<uint64_t>(ext_idx);
-			uint64_t idx2 = static_cast<uint64_t>(in_idx);
-			ar << idx1;
-			ar << idx2;
-		}
-	}
-
-	void Deserialize(CArchive& ar)
-	{
-		uint64_t size;
-		ar >> size;
-
-		while (size)
-		{
-			uint64_t idx1;
-			uint64_t idx2;
-			ar >> idx1 >> idx2;
-
-
-			inner_index_to_external.insert({ static_cast<int>(idx1), static_cast<int>(idx2) });
-			size--;
-		}
-	}
-
-#endif
-private:
-	auto This() const
-	{
-		return static_cast<const U*>(this);
-	}
-
-	auto This()
-	{
-		return static_cast<U*>(this);
-	}
-
-private:
-	template <class T, class U, class Z> class This;
+	inline static  constexpr external_idx_type StartIndex = 0;	
 };
 
 class StandartIndexMapper : public IndexerBase<size_t, size_t, StandartIndexMapper>
 {
 public:
 
-	inner_idx_type GetRealIndex(external_idx_type external_idx) const
+	inner_idx_type RealIndex(external_idx_type external_idx) const
 	{
-		inner_idx_type pos = static_cast<inner_idx_type>(external_idx);
-		return pos == _ammount ? npos : pos;
+#ifdef _DEBUG
+		_ASSERT(external_idx != npos);
+		_ASSERT(external_idx <= _ammount);
+#endif // _DEBUG
+		if (external_idx == npos || external_idx >= Count() || external_idx < 0)
+			return npos;
+
+		return static_cast<inner_idx_type>(external_idx);
+
 	}
 
 	void Insert(external_idx_type external_idx)
 	{
-		_ASSERT(external_idx == _ammount);
-		_ammount = external_idx + 1;
+#ifdef _DEBUG
+		_ASSERT(external_idx != npos);
+		_ASSERT((_ammount + 1) == external_idx);
+#endif // _DEBUG
+		_ammount = external_idx;
 	}
 
-	external_idx_type GetFirst() const
+	external_idx_type First() const
 	{
-		return StartIndex;
+		return IsEmpty() ? npos : StartIndex;
 	}
 
-	external_idx_type GetLast() const
+	external_idx_type Last() const
 	{
-		return _ammount == StartIndex ? StartIndex : _ammount - 1;
+		return  _ammount;
 	}
 
-	external_idx_type GetNext(external_idx_type external_idx)
+	external_idx_type Next(external_idx_type external_idx)
 	{
-		external_idx_type ammount = static_cast<external_idx_type>(_ammount);
-
-		if (external_idx < ammount)
-			external_idx++;
-
-		if (external_idx == ammount)
-		{
-			//Ситуация не правильная, но может и возможна
-			_ASSERT(0);
-			return eof;
-		}
-
-		return external_idx;
+#ifdef _DEBUG
+		_ASSERT((external_idx) != npos);
+		_ASSERT((external_idx + 1 ) != Count());
+#endif // _DEBUG
+		return IsEmpty() || external_idx + 1 == Count() ? npos : external_idx + 1;
 	}
 
-	external_idx_type GetCount() const
+	external_idx_type Prev(external_idx_type external_idx)
 	{
-		return _ammount;
+#ifdef _DEBUG
+		_ASSERT((external_idx - 1) != npos);
+		_ASSERT((external_idx -1 ) != npos);
+#endif // _DEBUG
+		return IsEmpty() ? npos : external_idx - 1;
 	}
+
+	external_idx_type Count() const
+	{
+		return _ammount + 1;
+	}
+
+	external_idx_type IsEmpty() const
+	{
+		return _ammount == npos;
+	}
+
 
 private:
-	size_t _ammount = 0;
+	size_t _ammount = npos;
 
 };
 
@@ -146,15 +103,21 @@ public:
 
 	external_idx_type GetFirst() const
 	{
-		if (IsEmpty())
+		if (GetCount() == 0)
 			return npos;
 
 		return inner_index_to_external.begin()->first;
 	}
 
+	external_idx_type CreateNewIndex() const
+	{
+		auto index = GetLast();
+		return index == npos ? StartIndex : ++index;
+	}
+
 	external_idx_type GetLast() const
 	{
-		if (IsEmpty())
+		if (GetCount() == 0)
 			return npos;
 
 		return inner_index_to_external.rbegin()->first;

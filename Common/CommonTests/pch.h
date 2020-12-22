@@ -8,5 +8,6 @@
 #define PCH_H
 #include <vector>
 #include "..\Common\Arrays\ke_farray_base.h"
+#include "..\Common\Arrays\ke_array_indexer.h"
 
 #endif //PCH_H
