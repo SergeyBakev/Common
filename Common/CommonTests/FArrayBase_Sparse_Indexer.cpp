@@ -2,15 +2,15 @@
 #include "CppUnitTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-
+using namespace std::string_literals;
 namespace CommonTests
 {
 	TEST_CLASS(FArrayBaseTest_Sparse_Indexer)
 	{
 	public:
 		
-		static constexpr size_t SIZE = 10000;
-		static constexpr size_t ELEMENT_SIZE = 26; //ƒл€ тестировани€ будет использоватьс€ вектор из 15 double
+		static constexpr size_t SIZE = 50000;
+		static constexpr size_t ELEMENT_SIZE = 26; //ƒл€ тестировани€ будет использоватьс€ вектор из 26 double
 		static std::vector<std::vector<double>> expected;
 		static std::vector<double> expected_doubles;
 		static std::vector<size_t> random_unique_indexes;
@@ -41,7 +41,16 @@ namespace CommonTests
 			std::vector<double> vec(ELEMENT_SIZE);
 			for (size_t i = 0; i < SIZE; i++)
 			{
-				GenerateRandomVector(vec);
+				double v = (double)i;
+				vec = { v,v,v,v,
+						v,v,v,v,
+						v,v,v,v,
+						v,v,v,v,
+						v,v,v,v,
+						v,v,v,v,
+						v,v
+				};
+				//GenerateRandomVector(vec);
 				expected.push_back(vec);
 				for (auto& i : vec)
 					expected_doubles.push_back(i);
@@ -324,7 +333,6 @@ namespace CommonTests
 
 				ar.GetAt(i-2,vec.data());
 				actual.push_back(vec);
-
 				ar.Add(expected[i].data());
 
 				expected_vec[i - 1] = expected[i-2];
@@ -337,11 +345,16 @@ namespace CommonTests
 			//assert
 			for (size_t i = 0; i < SIZE; i++)
 			{
-				auto& act_val = expected[i];
+				auto& act_val = expected_vec[i];
 				ar.GetAt(i, vec.data());
 				auto& expected_val = vec;
 
-				Assert::IsTrue(expected_val == act_val);
+				std::wstring str;
+				std::wstring str2;
+				std::for_each(act_val.begin(), act_val.end(), [&](double v) { str += std::to_wstring(v) + L" "s; });
+				std::for_each(expected_val.begin(), expected_val.end(), [&](double v) { str2 += std::to_wstring(v) + L" "s; });
+				auto msg = StringHelper::Concatenate(L" ", "Expected vector\n: ", str, "\nActual data:\n", str2, "\nError in iteration i:", i);
+				Assert::IsTrue(expected_val == act_val, msg.c_str());
 			}
 		}
 		//— это проблемой € столкнулс€ сразу же при внедрении в CFD/Stress
@@ -418,6 +431,45 @@ namespace CommonTests
 
 		TEST_METHOD(Add_Element_Data_Patrial_Assert_In_All_Iterations)
 		{
+
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<std::vector<double>> actual(SIZE);
+			std::vector<double> vec(ELEMENT_SIZE);
+
+			//act
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				for (size_t j = 0; j < 5; j++)
+					vec[j] = expected[i][j];
+
+				ar.SetAt(i, vec.data());
+			}	
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+
+				//Assert
+				for (size_t j = 0; j < 5; j++)
+				{
+					Assert::AreEqual(vec[j], expected[i][j],
+						StringHelper::Concatenate(L" ", "Get data at i: ", i, "j: ", j, "fail").c_str()
+					);
+				}
+
+				for (size_t j = 5; j < 10; j++)
+					vec[j] = expected[i][j];
+
+
+				ar.SetAt(i, vec.data());
+			}
+		}
+		/*
+		TEST_METHOD(Add_Element_Data_Patrial_Assert_In_All_Iterations)
+		{
+			
 			//arrange
 			FArrayBase ar;
 			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
@@ -433,7 +485,18 @@ namespace CommonTests
 				ar.SetAt(i, vec.data());
 			}
 
-			
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+				//Assert
+				for (size_t j = 0; j < 5; j++)
+				{
+					Assert::AreEqual(vec[j], expected[i][j],
+						StringHelper::Concatenate(L" ", "Get data at i: ", i, "j: ", j, "fail").c_str()
+					);
+				}
+			}
+
 			for (size_t i = 0; i < SIZE; i++)
 			{
 				ar.GetAt(i, vec.data());
@@ -512,7 +575,7 @@ namespace CommonTests
 				Assert::IsTrue(expected_val == act_val, line.c_str());
 			}
 
-		}
+		}*/
 
 		TEST_METHOD(Serialize_Deserialize_Arr)
 		{

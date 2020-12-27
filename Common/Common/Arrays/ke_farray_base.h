@@ -359,12 +359,6 @@ protected:
 			_Add(value, size);
 			return;
 		}
-
-		if (_need_flush)
-		{
-			_fs.flush();
-			_need_flush = false;
-		}
 			
 		inner_index_type index = _mapper.RealIndex(external_idx);
 
@@ -380,7 +374,7 @@ protected:
 #endif // DEBUG	
 		_fs.write(reinterpret_cast<const char*>(value), size);
 		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
-
+		_need_flush = true;
 
 	}
 
@@ -403,6 +397,7 @@ protected:
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");
 #endif // DEBUG	
+		auto t = _fs.tellg();
 		_fs.read(reinterpret_cast<char*>(value), size * count);
 		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size) * count;
 	}
