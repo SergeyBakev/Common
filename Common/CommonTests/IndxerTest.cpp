@@ -299,16 +299,221 @@ namespace CommonTests
 			Assert::AreEqual(next_after_prev1, prev1);
 			Assert::AreEqual(next_after_prev2, random_index);
 
-			Assert::AreEqual(real, random_index);
-
-			
-
+			Assert::AreEqual(real, random_index);			
 		}
 
 	};
 
 	TEST_CLASS(SparseIndexerTest)
 	{
+	public:
+		static constexpr size_t SIZE = 10000;
+		static std::vector<size_t> random_unique_indexes;
+
+		TEST_CLASS_INITIALIZE(ClassInitialize)
+		{
+			srand((uint32_t)time(nullptr));
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				size_t indexes = rand() % SIZE;
+				random_unique_indexes.push_back(indexes);
+			}
+
+			auto it = std::unique(std::begin(random_unique_indexes), std::end(random_unique_indexes));
+			random_unique_indexes.resize(std::distance(std::begin(random_unique_indexes), it));
+		}
+
+		TEST_METHOD(If_Empty_Get_Firsty)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+
+			//act
+			auto idx = mapper.First();
+
+			//assert
+			Assert::AreEqual(SparseIndexMapper::npos, idx);
+		}
+
+		TEST_METHOD(If_Empty_Get_Last)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+
+			//act
+			auto idx = mapper.Last();
+			//assert
+			Assert::AreEqual(SparseIndexMapper::npos, idx);
+		}
+
+		TEST_METHOD(If_Empty_Get_Prev)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+
+			//act
+			auto idx = mapper.Prev(0);
+
+			//assert
+			Assert::AreEqual(SparseIndexMapper::npos, idx);
+		}
+
+		TEST_METHOD(If_Empty_Get_Next)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+
+			//act
+			auto idx = mapper.Next(0);
+
+			//assert
+			Assert::AreEqual(SparseIndexMapper::npos, idx);
+		}
 		
+		TEST_METHOD(If_Empty_Get_Count)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+
+			//act
+			auto cnt = mapper.Count();
+			bool empty = mapper.IsEmpty();
+
+			//assert
+			Assert::AreEqual(SparseIndexMapper::npos, cnt);
+			Assert::AreEqual(true, empty);
+		}
+
+		TEST_METHOD(If_Empty_Get_Real_Index)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+
+			//act
+			auto idx = mapper.RealIndex(0);
+
+			//assert
+			Assert::AreEqual(SparseIndexMapper::npos, idx);
+		}
+
+		TEST_METHOD(If_Empty_Create_New_Index)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+
+			//act
+			auto idx = mapper.CreateIndex();
+
+			//assert
+			Assert::AreEqual(SparseIndexMapper::DefaultStartIndex, idx);
+		}
+
+		TEST_METHOD(Create_New_Index_If_Not_Empty)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+			for (auto& i : random_unique_indexes)
+				mapper.Add(i);
+
+			auto max = std::max_element(std::begin(random_unique_indexes), std::end(random_unique_indexes));
+			size_t expected = *max + 1;
+
+			//act
+			size_t actual = mapper.CreateIndex();
+
+			//assert
+			Assert::AreEqual(expected, actual);
+		}
+
+		TEST_METHOD(Add_And_Get_RealIndex)
+		{
+			//arrange
+			SparseIndexMapper mapper;
+			for (auto& i : random_unique_indexes)
+				mapper.Add(i);
+
+			size_t real_idx = rand() % random_unique_indexes.size();
+			size_t val = random_unique_indexes[real_idx];
+
+			//act
+			size_t actual = mapper.RealIndex(val);
+
+			//assert
+			Assert::AreEqual(real_idx, actual);
+		}
+
+		TEST_METHOD(Get_Real_Index_At_Negative_Index)
+		{
+			//arrange
+
+			//act
+
+			//assert
+		}
+
+		TEST_METHOD(Get_Count)
+		{
+			//arrange
+
+			//act
+
+			//assert
+		}
+
+		TEST_METHOD(Get_First)
+		{
+			//arrange
+
+			//act
+
+			//assert
+		}
+
+		TEST_METHOD(Get_Last)
+		{
+			//arrange
+
+			//act
+
+			//assert
+		}
+
+		TEST_METHOD(Get_Next)
+		{
+			//arrange
+
+			//act
+
+			//assert
+		}
+
+		TEST_METHOD(Get_Prev)
+		{	
+			//arrange
+
+			//act
+
+			//assert
+		}
+
+		TEST_METHOD(Get_Real_Index)
+		{
+			//arrange
+
+			//act
+
+			//assert
+		}
+
+		TEST_METHOD(All_Method_Together_When_All_Data_Correct)
+		{
+			//arrange
+
+			//act
+
+			//assert
+		}
 	};
+
+	std::vector<size_t> SparseIndexerTest::random_unique_indexes;
 }

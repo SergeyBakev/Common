@@ -366,7 +366,6 @@ protected:
 			_need_flush = false;
 		}
 			
-		auto t = _fs.tellp();
 		inner_index_type index = _mapper.RealIndex(external_idx);
 
 		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);

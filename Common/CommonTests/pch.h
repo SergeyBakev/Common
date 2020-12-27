@@ -7,7 +7,9 @@
 #ifndef PCH_H
 #define PCH_H
 #include <vector>
+#include <algorithm>
 #include "..\Common\Arrays\ke_farray_base.h"
+#include "..\Common\Helpers\StringHelper.h"
 #include "..\Common\Arrays\ke_array_indexer.h"
 
 #endif //PCH_H

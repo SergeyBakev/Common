@@ -31,10 +31,8 @@ public:
 
 	void Add(external_idx_type external_idx)
 	{
-#ifdef _DEBUG
 		_ASSERT(external_idx != npos);
 		_ASSERT((_ammount + 1) == external_idx);
-#endif // _DEBUG
 		_ammount = external_idx;
 	}
 
@@ -50,19 +48,15 @@ public:
 
 	external_idx_type Next(external_idx_type external_idx)
 	{
-#ifdef _DEBUG
 		_ASSERT((external_idx) != npos);
 		_ASSERT((external_idx + 1 ) != Count());
-#endif // _DEBUG
 		return IsEmpty() || external_idx + 1 == Count() ? npos : external_idx + 1;
 	}
 
 	external_idx_type Prev(external_idx_type external_idx)
 	{
-#ifdef _DEBUG
 		_ASSERT((external_idx - 1) != npos);
 		_ASSERT((external_idx -1 ) != npos);
-#endif // _DEBUG
 		return IsEmpty() ? npos : external_idx - 1;
 	}
 
@@ -81,6 +75,11 @@ public:
 		return _ammount + 1;
 	}
 
+	void Clear()
+	{
+		_ammount = npos;
+	}
+
 private:
 	size_t _ammount = npos;
 
@@ -93,35 +92,30 @@ public:
 	inner_idx_type RealIndex(external_idx_type external_idx) const
 	{
 		auto it = inner_index_to_external.find(external_idx);
-		if (it != std::end(inner_index_to_external))
-		{
-			return it->second;
-		}
-		return npos;
+		if (it == std::end(inner_index_to_external))
+			return npos;
+
+		return it->second;
+		
 	}
 
 	void Add(external_idx_type external_idx)
 	{
+		_ASSERT(external_idx != npos);
 		inner_index_to_external.insert(std::make_pair(external_idx, Count()));
 	}
 
 	external_idx_type First() const
 	{
-		if (Count() == 0)
+		if (IsEmpty())
 			return npos;
 
 		return inner_index_to_external.begin()->first;
 	}
 
-	external_idx_type CreateIndex() const
-	{
-		auto index = Last();
-		return index == npos ? DefaultStartIndex : ++index;
-	}
-
 	external_idx_type Last() const
 	{
-		if (Count() == 0)
+		if (IsEmpty())
 			return npos;
 
 		return inner_index_to_external.rbegin()->first;
@@ -129,11 +123,29 @@ public:
 
 	external_idx_type Next(external_idx_type external_idx) const
 	{
-		auto it = inner_index_to_external.find(external_idx);
-		if (++it != std::end(inner_index_to_external))
-			return (it)->first;
+		_ASSERT(external_idx != npos);
 
-		return npos;
+		auto it = inner_index_to_external.find(external_idx);
+		if (it == std::end(inner_index_to_external) || ++it == std::end(inner_index_to_external))
+			return npos;
+
+		return (it)->first;
+	}
+
+	external_idx_type Prev(external_idx_type external_idx) const
+	{
+		_ASSERT(external_idx != npos);
+		auto it = inner_index_to_external.find(external_idx);
+		if (it == std::end(inner_index_to_external) || --it != std::end(inner_index_to_external))
+			return npos;
+
+		return (it)->first;	
+	}
+
+	external_idx_type CreateIndex() const
+	{
+		auto index = Last();
+		return index == npos ? DefaultStartIndex : ++index;
 	}
 
 	size_t Count() const noexcept
@@ -145,6 +157,8 @@ public:
 	{
 		inner_index_to_external.clear();
 	}
+
+	bool IsEmpty() const { return inner_index_to_external.empty(); }
 
 	void Serialize(std::ofstream& storage) const
 	{
@@ -176,6 +190,7 @@ public:
 			inner_index_to_external.insert({ in,ext });
 		}
 	}
+
 private:
 	std::map<external_idx_type, inner_idx_type> inner_index_to_external;
 };

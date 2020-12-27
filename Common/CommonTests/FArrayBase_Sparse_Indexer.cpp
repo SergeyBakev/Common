@@ -9,7 +9,7 @@ namespace CommonTests
 	{
 	public:
 		
-		static constexpr size_t SIZE = 100000;
+		static constexpr size_t SIZE = 10000;
 		static constexpr size_t ELEMENT_SIZE = 26; //ƒл€ тестировани€ будет использоватьс€ вектор из 15 double
 		static std::vector<std::vector<double>> expected;
 		static std::vector<double> expected_doubles;
@@ -73,6 +73,26 @@ namespace CommonTests
 			Assert::AreEqual(expected_size, actual);
 		}
 
+		//“ак как был добавлен признак нужно ли сделать флаш, стоит проверить
+
+		TEST_METHOD(Verify_Is_Data_Flush_After_Add_And_Get)
+		{
+			//arrange
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<std::vector<double>> actual;
+			std::vector<double> vec(ELEMENT_SIZE);
+			AddArrayElementFromExpectedVector(ar);
+
+			//act
+			ar.GetAt(SIZE - 1, vec.data());
+
+			//assert
+			Assert::IsTrue(vec == expected[SIZE - 1]);
+
+		}
+
 		//ѕровер€етс€ последовательное добавление елементов
 
 		TEST_METHOD(Add_New_Element_And_Get_Them)
@@ -133,7 +153,7 @@ namespace CommonTests
 				//for expected
 				actual.push_back(vec);
 
-				auto& v = expected[i];
+				auto& v = expected[random_index];
 
 				//for expected
 				expeted_vec.push_back(v);
@@ -390,7 +410,106 @@ namespace CommonTests
 				ar.GetAt(i, vec.data());
 				auto& expected_val = vec;
 
-				Assert::IsTrue(expected_val == act_val);
+				auto line = StringHelper::Concatenate(L" ", "Data at index: ", i, "invalid");
+				Assert::IsTrue(expected_val == act_val, line.c_str());
+			}
+
+		}
+
+		TEST_METHOD(Add_Element_Data_Patrial_Assert_In_All_Iterations)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<std::vector<double>> actual(SIZE);
+			std::vector<double> vec(ELEMENT_SIZE);
+
+			//act
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				for (size_t j = 0; j < 5; j++)
+					vec[j] = expected[i][j];
+
+				ar.SetAt(i, vec.data());
+			}
+
+			
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+
+				//Assert
+				for (size_t j = 0; j < 5; j++)
+				{
+					Assert::AreEqual(vec[j], expected[i][j],
+						StringHelper::Concatenate(L" ","Get data at i: ", i, "j: ",j,"fail").c_str()
+						);
+				}
+
+				for (size_t j = 5; j < 10; j++)
+					vec[j] = expected[i][j];
+
+				
+				ar.SetAt(i, vec.data());
+			}
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+
+				//Assert
+				for (size_t j = 0; j < 10; j++)
+				{
+					Assert::AreEqual(vec[j], expected[i][j]);
+				}
+
+				for (size_t j = 10; j < 15; j++)
+					vec[j] = expected[i][j];
+
+				ar.SetAt(i, vec.data());
+			}
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+				//Assert
+				for (size_t j = 0; j < 15; j++)
+				{
+					Assert::AreEqual(vec[j], expected[i][j]);
+				}
+
+				for (size_t j = 15; j < 20; j++)
+					vec[j] = expected[i][j];
+
+				ar.SetAt(i, vec.data());
+			}
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				ar.GetAt(i, vec.data());
+
+				//Assert
+				for (size_t j = 0; j < 20; j++)
+				{
+					Assert::AreEqual(vec[j], expected[i][j]);
+				}
+
+				for (size_t j = 20; j < 26; j++)
+					vec[j] = expected[i][j];
+
+				ar.SetAt(i, vec.data());
+			}
+
+
+			//assert
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				auto& act_val = expected[i ];
+				ar.GetAt(i, vec.data());
+				auto& expected_val = vec;
+
+				auto line = StringHelper::Concatenate(L" ", "Data at index: ", i, "invalid");
+				Assert::IsTrue(expected_val == act_val, line.c_str());
 			}
 
 		}
@@ -475,6 +594,17 @@ namespace CommonTests
 			Assert::IsTrue(actual == expected_doubles);
 		}
 
+		TEST_METHOD(Get_Begin_Iterator_If_Array_And_Try_Get_Data)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+
+			//act
+			auto it = ar.begin();
+			Assert::ExpectException<std::out_of_range>([&]() {it.Get<double>(); });
+
+		}
 		TEST_METHOD(Get_Begin_Iterator)
 		{
 			//arrange
@@ -492,7 +622,7 @@ namespace CommonTests
 			Assert::IsTrue(expected_vec == actual);
 		}
 
-		TEST_METHOD(Get_End_Iterator)
+		TEST_METHOD(Get_End_Iterator_And_Try_Get_Data)
 		{
 
 			//arrange
@@ -503,12 +633,7 @@ namespace CommonTests
 
 			//act
 			auto it = ar.end();
-			auto elem = it.Get<double>();
-
-			//assert
-			std::vector<double> actual(elem, elem + ELEMENT_SIZE);
-			Assert::IsTrue(expected_vec == actual);
-
+			Assert::ExpectException<std::out_of_range>([&]() {it.Get<double>(); });	
 		}
 
 		TEST_METHOD(End_Equals_Begin_If_Array_Empty)
@@ -520,7 +645,6 @@ namespace CommonTests
 			//act
 			auto begin = ar.begin();
 			auto end = ar.end();
-			auto i = *begin;
 			//assert
 			Assert::IsTrue(begin == end);
 		}
@@ -536,7 +660,7 @@ namespace CommonTests
 			auto begin = ar.begin();
 			auto end = ar.end();
 			//assert
-			Assert::IsFalse(begin != end);
+			Assert::IsTrue(begin != end);
 		}
 
 		TEST_METHOD(For_Each_Get)
