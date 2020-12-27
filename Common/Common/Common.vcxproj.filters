@@ -16,6 +16,9 @@
     <Filter Include="Arrays">
       <UniqueIdentifier>{fd2f0215-13af-492d-8edd-c5d5ee8e3dc4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Helpers">
+      <UniqueIdentifier>{e6e343d7-7723-4239-8095-f67c9088094c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -32,6 +35,9 @@
     </ClInclude>
     <ClInclude Include="Arrays\ke_farray_base.h">
       <Filter>Arrays</Filter>
+    </ClInclude>
+    <ClInclude Include="Helpers\StringHelper.h">
+      <Filter>Helpers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

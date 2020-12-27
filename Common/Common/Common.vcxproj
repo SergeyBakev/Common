@@ -159,6 +159,7 @@
     <ClInclude Include="Arrays\ke_farray.h" />
     <ClInclude Include="Arrays\ke_farray_base.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Helpers\StringHelper.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

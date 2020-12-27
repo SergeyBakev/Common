@@ -160,7 +160,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CommonTests.cpp" />
+    <ClCompile Include="FArrayBase_Sparse_Indexer.cpp" />
+    <ClCompile Include="FArray_Base_Standart_Indexer.cpp" />
     <ClCompile Include="IndxerTest.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

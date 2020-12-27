@@ -79,7 +79,18 @@ namespace CommonTests
 			Assert::AreEqual(StandartIndexMapper::npos, idx);
 		}
 
-		TEST_METHOD(Insert_And_Get_RealIndex)
+		TEST_METHOD(If_Empty_Create_New_Index)
+		{
+			//arrange
+			StandartIndexMapper indexer;
+
+			//act
+			auto idx = indexer.CreateIndex();
+
+			//assert
+			Assert::AreEqual(StandartIndexMapper::DefaultStartIndex, idx);
+		}
+		TEST_METHOD(Add_And_Get_RealIndex)
 		{
 			//arrange
 			StandartIndexMapper indexer;
@@ -88,9 +99,9 @@ namespace CommonTests
 			size_t idx2 = 2;
 
 			//act
-			indexer.Insert(idx0);
-			indexer.Insert(idx1);
-			indexer.Insert(idx2);
+			indexer.Add(idx0);
+			indexer.Add(idx1);
+			indexer.Add(idx2);
 
 			size_t actual_idx0 = indexer.RealIndex(idx0);
 			size_t actual_idx1 = indexer.RealIndex(idx1);
@@ -110,9 +121,9 @@ namespace CommonTests
 			size_t idx0 = 0;
 			size_t idx1 = 1;
 			size_t idx2 = 2;
-			indexer.Insert(idx0);
-			indexer.Insert(idx1);
-			indexer.Insert(idx2);
+			indexer.Add(idx0);
+			indexer.Add(idx1);
+			indexer.Add(idx2);
 
 			//act
 			size_t idx = indexer.RealIndex(-2);
@@ -127,9 +138,9 @@ namespace CommonTests
 			StandartIndexMapper indexer;
 			size_t idx = 0;			
 
-			indexer.Insert(idx++);
-			indexer.Insert(idx++);
-			indexer.Insert(idx++);
+			indexer.Add(idx++);
+			indexer.Add(idx++);
+			indexer.Add(idx++);
 
 			size_t count = idx;
 
@@ -147,9 +158,9 @@ namespace CommonTests
 			size_t expected_index = 0;
 			size_t expected_index2 = expected_index;
 			size_t actual_index;
-			indexer.Insert(expected_index2++);
-			indexer.Insert(expected_index2++);
-			indexer.Insert(expected_index2++);
+			indexer.Add(expected_index2++);
+			indexer.Add(expected_index2++);
+			indexer.Add(expected_index2++);
 
 			//act
 			actual_index = indexer.First();
@@ -165,9 +176,9 @@ namespace CommonTests
 			size_t expected_index = 0;
 			size_t actual_index;
 
-			indexer.Insert(expected_index++);
-			indexer.Insert(expected_index++);
-			indexer.Insert(expected_index);
+			indexer.Add(expected_index++);
+			indexer.Add(expected_index++);
+			indexer.Add(expected_index);
 
 			//act
 			actual_index = indexer.Last();
@@ -184,9 +195,9 @@ namespace CommonTests
 			size_t idx1 = 1;
 			size_t idx2 = 2;
 			
-			indexer.Insert(idx0);
-			indexer.Insert(idx1);
-			indexer.Insert(idx2);
+			indexer.Add(idx0);
+			indexer.Add(idx1);
+			indexer.Add(idx2);
 
 			//act
 			size_t actual_idx1 = indexer.Next(idx0);
@@ -206,9 +217,9 @@ namespace CommonTests
 			size_t idx1 = 1;
 			size_t idx2 = 2;
 
-			indexer.Insert(idx0);
-			indexer.Insert(idx1);
-			indexer.Insert(idx2);
+			indexer.Add(idx0);
+			indexer.Add(idx1);
+			indexer.Add(idx2);
 
 			//act
 			size_t actual_idx0 = indexer.Prev(idx1);
@@ -230,9 +241,9 @@ namespace CommonTests
 			size_t idx1 = 1;
 			size_t idx2 = 2;
 
-			indexer.Insert(idx0);
-			indexer.Insert(idx1);
-			indexer.Insert(idx2);
+			indexer.Add(idx0);
+			indexer.Add(idx1);
+			indexer.Add(idx2);
 
 			//act
 			size_t actual_idx0 = indexer.RealIndex(idx0);
@@ -246,6 +257,54 @@ namespace CommonTests
 			Assert::AreEqual(idx2, actual_idx2);
 			Assert::AreEqual(StandartIndexMapper::npos, actual_idx3);
 		}
+
+		TEST_METHOD(All_Method_Together_When_All_Data_Correct)
+		{
+			srand((uint32_t)time(nullptr));
+			//arrange
+			StandartIndexMapper indexer;
+			const size_t COUNT = 10000;
+			size_t random_index = rand() % COUNT;
+			//act
+			for (size_t i = 0; i < COUNT; i++)
+				indexer.Add(indexer.CreateIndex());
+			
+			size_t next1 = indexer.Next(random_index);
+			size_t next2 = indexer.Next(next1);
+			size_t prev_after_next1 = indexer.Prev(next2);
+			size_t prev_after_next2 = indexer.Prev(prev_after_next1);
+
+			size_t prev1 = indexer.Prev(random_index);
+			size_t prev2 = indexer.Prev(prev1);
+			size_t next_after_prev1 = indexer.Next(prev2);
+			size_t next_after_prev2 = indexer.Next(next_after_prev1);
+
+			size_t real = indexer.RealIndex(random_index);
+			size_t count = indexer.Count();
+
+
+			//assert
+			Assert::AreEqual(StandartIndexMapper::DefaultStartIndex, indexer.First());
+			Assert::AreEqual(COUNT - 1, indexer.Last());
+			Assert::AreEqual(count, indexer.Count());
+
+
+			Assert::AreEqual(next1, random_index + 1);
+			Assert::AreEqual(next2, random_index + 2);
+			Assert::AreEqual(prev_after_next1, next1);
+			Assert::AreEqual(prev_after_next2, random_index);
+
+			Assert::AreEqual(prev1, random_index - 1);
+			Assert::AreEqual(prev2, random_index - 2);
+			Assert::AreEqual(next_after_prev1, prev1);
+			Assert::AreEqual(next_after_prev2, random_index);
+
+			Assert::AreEqual(real, random_index);
+
+			
+
+		}
+
 	};
 
 	TEST_CLASS(SparseIndexerTest)

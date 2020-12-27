@@ -120,7 +120,7 @@ public:
 		return *this;
 	}
 
-	FArrayObject& operator = (const U&& value)
+	FArrayObject& operator = (U&& value)
 	{
 		_need_flush = true;
 		_data = std::move(value);

@@ -4,12 +4,14 @@
 #include <fstream>
 #include <filesystem>
 #include <memory>
+#include <cmath>
 #include <vector>
 #include <stdint.h>
 #include <map>
 #include <filesystem>
-#include "ke_array_indexer.h"
 #include <tchar.h>
+#include "ke_array_indexer.h"
+#include "..\Helpers\StringHelper.h"
 
 class FArrayFileStorage
 {
@@ -61,16 +63,13 @@ template<class IndexMapper> class FArrayBaseProxyObject;
 template <class IndexMapper = SparseIndexMapper>
 class FArrayBase
 {
-	
-
 public:
 	using object_size = size_t;
 	using index_type = typename IndexMapper::external_idx_type;
 	using inner_index_type = typename IndexMapper::inner_idx_type;
 	using IndexerType = IndexMapper;
-
 	using iterator = FArrayBaseProxyObject<IndexMapper>;
-
+	
 	FArrayBase()
 	{
 		std::wstring fileName = CreateTemoraryFileName();
@@ -115,14 +114,22 @@ public:
 		return false;
 	}
 
-	inline void Add(void* value)
+	void Add(void* value)
 	{
-		return Add(value, _buffer_size);
+		Add(value, _buffer_size);
+	}
+
+	//value - data for write
+	//size - size of the write object
+	//count - count of the write objects
+	void Add(void* value, object_size size, size_t count)
+	{
+		Add(value, size * count);
 	}
 
 	void Add(void* value, object_size size)
 	{
-		_mapper.Insert(_mapper.CreateNewIndex());
+		_mapper.Add(_mapper.CreateIndex());
 		_Add(value, size);
 	}
 
@@ -131,25 +138,37 @@ public:
 		SetAt(idx, object, _buffer_size);
 	}
 
-	void SetAt(const index_type& idx, void* object, object_size size)
+	void SetAt(const index_type& idx, void* storage, object_size size)
 	{
-		_ReplaceAtOrAdd(idx, object, size);
+		_ReplaceAtOrAdd(idx, storage, size);
 	}
 
-	void GetAt(const index_type& index, void* object) const
+	//index - pos for get
+	//storage - container for read data
+	//size - size of the read object
+	//count - count of the read objects
+	void GetAt(const index_type& index, void* storage, const object_size& size, size_t count) const
 	{
 		if (!Contains(index))
-			throw std::out_of_range("Invalid index");
+			ThrowOutOfRange(index);
+
+		_GetAt(_mapper.RealIndex(index), storage, size, count);
+	}
+
+	void GetAt(const index_type& index, void* storage, size_t count) const
+	{
+		if (!Contains(index))
+			ThrowOutOfRange(index);
+
+		_GetAt(_mapper.RealIndex(index), storage, _buffer_size, count);
+	}
+
+	void GetAt(const index_type& index, void* storage) const
+	{
+		if (!Contains(index))
+			ThrowOutOfRange(index);
 		
-		return _GetAt(_mapper.GetRealIndex(index), object, _buffer_size);
-	}
-
-	void GetAt(const index_type& index, void* object, object_size size) const
-	{
-		if (!Contains(index))
-			return;
-
-		return _GetAt(_mapper.GetRealIndex(index), object, size);
+		_GetAt(_mapper.RealIndex(index), storage, _buffer_size,1);
 	}
 
 	void Clear()
@@ -165,9 +184,15 @@ public:
 
 	}
 
-	inline size_t Count() const noexcept { return _mapper.GetCount(); }
+	inline size_t Count() const noexcept { return _end_pos / _buffer_size; }
 
 	object_size GetObjectSize()const{return _buffer_size;}
+
+	template <class Type>
+	size_t GetCountElement() const
+	{
+		return _buffer_size / sizeof(std::remove_pointer_t<std::remove_cvref_t<Type>>);
+	}
 
 	void SetObjectSize(object_size size)
 	{
@@ -205,7 +230,7 @@ public:
 
 	bool Contains(const index_type& idx) const
 	{
-		return _mapper.GetRealIndex(idx) != IndexMapper::npos;
+		return _mapper.RealIndex(idx) != IndexMapper::npos;
 	}
 
 	void Serialize(std::ofstream& storage) const
@@ -262,9 +287,19 @@ public:
 		}	
 	}
 
-	FArrayBaseProxyObject<IndexMapper> begin()
+	iterator operator [](index_type idx)
 	{
-		return FArrayBaseProxyObject<IndexMapper>(_mapper.GetFirst(),this);
+		return iterator(_mapper.RealIndex(idx), this,_mapper);
+	}
+
+	iterator begin()
+	{
+		return FArrayBaseProxyObject<IndexMapper>(_mapper.First(),this,_mapper);
+	}
+
+	iterator end()
+	{
+		return FArrayBaseProxyObject<IndexMapper>(IndexerType::npos, this, _mapper);
 	}
 
 	~FArrayBase()
@@ -280,13 +315,7 @@ protected:
 	mutable bool _need_flush = false;
 	mutable std::streamoff _end_pos = 0;
 	mutable std::fstream _fs;
-
-#ifdef UNICODE
 	std::wstring _file_name;
-#else
-	std::string _file_name;
-#endif // UNICODE
-
 
 	bool _isTemporary = true;
 
@@ -318,7 +347,6 @@ protected:
 		std::filesystem::path temp_dir = std::filesystem::temp_directory_path();
 		temp_dir /= file_name;
 #endif
-
 		return file_name;
 	}
 
@@ -327,7 +355,7 @@ protected:
 		_ASSERT(size != 0);
 		if (!Contains(external_idx))
 		{
-			_mapper.Insert(external_idx);
+			_mapper.Add(external_idx);
 			_Add(value, size);
 			return;
 		}
@@ -339,7 +367,7 @@ protected:
 		}
 			
 		auto t = _fs.tellp();
-		inner_index_type index = _mapper.GetRealIndex(external_idx);
+		inner_index_type index = _mapper.RealIndex(external_idx);
 
 		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);
 		std::streamoff seek = sizeoffset - _current_putpos;
@@ -352,15 +380,12 @@ protected:
 			throw std::exception("Stream has invalid state");
 #endif // DEBUG	
 		_fs.write(reinterpret_cast<const char*>(value), size);
-
-		auto t2 = _fs.tellp();
-
 		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
 
 
 	}
 
-	void _GetAt(const index_type& index, void* value, object_size size) const
+	void _GetAt(const index_type& index, void* value, object_size size, size_t count) const
 	{
 		if (_need_flush)
 		{
@@ -379,14 +404,14 @@ protected:
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");
 #endif // DEBUG	
-		_fs.read(reinterpret_cast<char*>(value), size);
-		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
+		_fs.read(reinterpret_cast<char*>(value), size * count);
+		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size) * count;
 	}
 
 	void _Add(void* value, object_size size)
 	{
-		_ASSERT(size != 0);
-		
+		_ASSERT(size != 0);		
+		_ASSERT(size >=_buffer_size);		
 		if(_end_pos != _current_putpos)
 		{
 			size_t seek_size = _end_pos - _current_putpos;
@@ -397,11 +422,17 @@ protected:
 		_current_putpos = _end_pos;
 
 		_fs.write(reinterpret_cast<char*>(value), size);
-		_need_flush = true;
+		if (!_need_flush)
+			_need_flush = true;
 #ifdef _DEBUG
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");
 #endif // DEBUG	
+	}
+
+	void ThrowOutOfRange(const index_type& idx ) const
+	{
+		throw std::out_of_range(StringHelper::Concatenate(" ", "Index:", idx, "doest contains in array"));
 	}
 };
 
@@ -412,30 +443,132 @@ public:
 	template <class Indexer> friend class FArrayBase;
 	using index_type = typename IndexMapper::external_idx_type;
 	using inner_index_type = typename IndexMapper::inner_idx_type;
-	
-	struct MemoryDeleter{void operator()(void* mem) { free(mem); }};
+	struct MemoryDeleter { void operator()(void* mem) { free(mem); } };
 
 private:
 
-	template <class IndexMapper>
-	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr) :
-		_arr(arr), _idx(idx)
+	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr, IndexMapper& mapper) :
+		_arr(arr), _idx(idx), _mapper(mapper), _need_flush(false)
+		
+	{
+		_buffer.reset(malloc(_arr->GetObjectSize()));
+	}
+
+	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr,std::unique_ptr<void, MemoryDeleter> ptr, IndexMapper& mapper) :
+		_arr(arr), _idx(idx),
+		_buffer(std::move(ptr)),
+		_mapper(mapper)
 	{
 		_buffer.reset(malloc(_arr->GetObjectSize()));
 	}
 
 public:
 	FArrayBaseProxyObject() = delete;
-
-	FArrayBaseProxyObject(FArrayBaseProxyObject&& other)
-		: _buffer(std::move(other._buffer)),
+	
+	FArrayBaseProxyObject(FArrayBaseProxyObject&& other) noexcept:
+		_buffer(std::move(other._buffer)),
 		_arr(other._arr),
-		_idx(other._idx)
+		_idx(other._idx),
+		_mapper(other._mapper),
+		_need_flush(other._need_flush)
 	{
-
+		_ASSERT(_need_flush == false);
 	}
 
-	void* operator*()
+	size_t ObjectSize() const { return _arr->GetObjectSize(); }
+	
+	FArrayBaseProxyObject(const FArrayBaseProxyObject& other) :
+		_arr(other._arr),
+		_idx(other._idx),
+		_mapper(other._mapper),
+		_need_flush(other._need_flush)
+	{
+		_ASSERT(_need_flush == false);
+		_buffer.reset(malloc(_arr->GetObjectSize()));
+		memcpy(_buffer.get(), other._buffer.get(), _arr->GetObjectSize());
+		
+	}
+
+	FArrayBaseProxyObject& operator*()
+	{
+		return *this;
+	}
+
+	bool operator ==(const FArrayBaseProxyObject& other) const
+	{
+		return _idx == other._idx;
+	}
+
+	bool operator !=(const FArrayBaseProxyObject& other) const
+	{
+		return !this->operator==(other);
+	}
+
+	FArrayBaseProxyObject& operator=(FArrayBaseProxyObject&& other) noexcept
+	{
+		_idx = other._idx;
+		_buffer = std::move(other._buffer);
+		_arr = other._arr;
+	}
+
+	FArrayBaseProxyObject& operator=(const FArrayBaseProxyObject& other)
+	{
+		_idx = other._idx;
+		memcpy(_buffer.get(), other._buffer.get(), _arr->GetObjectSize());
+		_arr = other._arr;
+	}
+
+	template <typename Type>
+	std::remove_pointer_t<std::remove_cvref_t<Type>>* Get() const
+	{
+		return (std::remove_pointer_t<std::remove_cvref_t<Type>>*)Get();
+	}
+
+	void* Get() const
+	{
+		return GetData_(_idx);
+	}
+
+	template <typename Type>
+	void Set(std::remove_pointer_t<std::remove_cvref_t<Type>>* object)
+	{
+		using type = std::remove_pointer_t<std::remove_cvref_t<Type>>;
+#ifdef _DEBUG
+		_ASSERT((sizeof(type) * _arr->GetCountElement<type>()) == ObjectSize());
+#endif // _DEBUG
+
+		Set(object);
+	}
+
+	void Set(void* object)
+	{
+		memcpy(_buffer.get(), object, _arr->GetObjectSize());
+		_need_flush = true;
+	}
+
+	FArrayBaseProxyObject& operator++()
+	{
+		TryFlushIfDataWrite();
+		_idx = _mapper.Next(_idx);
+		return *this;
+	}
+
+	FArrayBaseProxyObject operator++(int)
+	{
+		auto tmp = *this;
+		this->operator++();
+		return tmp;
+		
+	}
+
+	~FArrayBaseProxyObject()
+	{
+		TryFlushIfDataWrite();
+	}
+
+private:
+
+	void* GetData_(size_t idx) const
 	{
 #ifdef _DEBUG
 		_ASSERT(_idx >= 0 && _idx != IndexMapper::npos);
@@ -444,24 +577,24 @@ public:
 		_arr->GetAt(_idx, _buffer.get());
 		return _buffer.get();
 	}
-	
-	void* operator*() const
+
+	void TryFlushIfDataWrite()
 	{
-#ifdef _DEBUG
-		_ASSERT(_idx >= 0 && _idx != IndexMapper::npos );
-		_ASSERT(_idx < _arr->Count());
-#endif 
-		_arr->GetAt(_idx, _buffer.get());
-		return _buffer.get();
-	}
-	template <typename Type>
-	Type* Get() const
-	{
-		return (Type*)this->operator*();
+		if (_need_flush)
+		{
+			_arr->SetAt(_idx, _buffer.get());
+			_need_flush = false;
+		}
 	}
 
 private:
 	std::unique_ptr<void, MemoryDeleter> _buffer;
 	FArrayBase<IndexMapper>* _arr;
+	IndexMapper& _mapper;
 	index_type _idx;
+	bool _need_flush;
 };
+
+
+using SparseFArray = FArrayBase<SparseIndexMapper>;
+using FArray = FArrayBase<StandartIndexMapper>;

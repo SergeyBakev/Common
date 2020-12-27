@@ -5,15 +5,16 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace CommonTests
 {
-	TEST_CLASS(FArrayBaseTest)
+	TEST_CLASS(FArrayBaseTest_Sparse_Indexer)
 	{
 	public:
 		
-		static constexpr size_t SIZE = 1000;
+		static constexpr size_t SIZE = 100000;
 		static constexpr size_t ELEMENT_SIZE = 26; //Для тестирования будет использоваться вектор из 15 double
 		static std::vector<std::vector<double>> expected;
+		static std::vector<double> expected_doubles;
 		static std::vector<size_t> random_unique_indexes;
-
+		static constexpr size_t OBJECTS_SIZE = 10;
 		static void GenerateRandomVector(std::vector<double>& vec)
 		{
 			if (vec.size() != ELEMENT_SIZE)
@@ -42,7 +43,9 @@ namespace CommonTests
 			{
 				GenerateRandomVector(vec);
 				expected.push_back(vec);
-
+				for (auto& i : vec)
+					expected_doubles.push_back(i);
+				
 				srand((uint32_t)time(nullptr));
 
 				size_t indexes = rand() % SIZE;
@@ -392,7 +395,6 @@ namespace CommonTests
 
 		}
 
-
 		TEST_METHOD(Serialize_Deserialize_Arr)
 		{
 			//arrange
@@ -435,7 +437,6 @@ namespace CommonTests
 			std::remove(file_name.c_str());
 		}
 
-
 		//С данной проблемой я столкнулся при очистики масива, но при этому не сбрасывая индексы
 		TEST_METHOD(Add_Element_Clear_Array_And_Try_Get)
 		{
@@ -450,21 +451,227 @@ namespace CommonTests
 			Assert::ExpectException<std::out_of_range>(func);
 		}
 
+		//Решил добавить функциональность по чтению больше чем ObjectSize
+		TEST_METHOD(Get_Elemet_More_Then_One_Elemnt)
+		{
+			//arrange
+			SparseFArray arr;
+			arr.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			AddArrayElementFromExpectedVector(arr);
+			std::vector<double> data(OBJECTS_SIZE * ELEMENT_SIZE);		
+			std::vector<double> actual;
+
+			//act
+			for (size_t i = 0; i < SIZE; i += 10)
+			{
+				arr.GetAt(i, data.data(), OBJECTS_SIZE);
+				for (auto& i : data)
+					actual.push_back(i);
+
+			}
+
+			//assert
+			Assert::AreEqual(actual.size(), expected_doubles.size());
+			Assert::IsTrue(actual == expected_doubles);
+		}
+
 		TEST_METHOD(Get_Begin_Iterator)
 		{
+			//arrange
 			FArrayBase ar;
 			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
 			std::vector<double> expected_vec = expected[0];
 			ar.Add(expected_vec.data());
 
+			//act
 			auto it = ar.begin();
 			auto elem = it.Get<double>();
+			
+			//assert
 			std::vector<double> actual(elem, elem + ELEMENT_SIZE);
-
 			Assert::IsTrue(expected_vec == actual);
+		}
+
+		TEST_METHOD(Get_End_Iterator)
+		{
+
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<double> expected_vec = expected[0];
+			ar.Add(expected_vec.data());
+
+			//act
+			auto it = ar.end();
+			auto elem = it.Get<double>();
+
+			//assert
+			std::vector<double> actual(elem, elem + ELEMENT_SIZE);
+			Assert::IsTrue(expected_vec == actual);
+
+		}
+
+		TEST_METHOD(End_Equals_Begin_If_Array_Empty)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+
+			//act
+			auto begin = ar.begin();
+			auto end = ar.end();
+			auto i = *begin;
+			//assert
+			Assert::IsTrue(begin == end);
+		}
+
+		TEST_METHOD(End_Not_Equals_Begin_If_Array_Not_Empty)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			std::vector<double> expected_vec = expected[0];
+			ar.Add(expected_vec.data());
+			//act
+			auto begin = ar.begin();
+			auto end = ar.end();
+			//assert
+			Assert::IsFalse(begin != end);
+		}
+
+		TEST_METHOD(For_Each_Get)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			AddArrayElementFromExpectedVector(ar);
+			std::vector<std::vector<double>> actual;
+			size_t count = 0;
+			//act
+			for (auto& it : ar)
+			{
+				double* data = it.Get<double>();
+				std::vector < double> v;
+				v.assign(data, data + it.ObjectSize() / sizeof(double));
+				actual.push_back(std::move(v));
+				count++;
+			}
+
+			//assert
+			Assert::AreEqual(count, ar.Count());
+			Assert::AreEqual(actual.size(), expected.size());
+			
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				auto& act_val = actual[i];
+				auto& expected_val = expected[i];
+
+				Assert::IsTrue(expected_val == act_val);
+			}
+			
+		}
+
+		TEST_METHOD(For_Each_Get_Set)
+		{
+			//arrange
+			srand((uint32_t)time(nullptr));
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			AddArrayElementFromExpectedVector(ar);
+
+			std::vector<std::vector<double>> actual;
+			std::vector<std::vector<double>> expected_vec;
+
+			//act
+
+			//set
+			for (auto& it : ar)
+			{
+				size_t index = rand() % SIZE;
+				auto& data = expected[index];
+				it.Set(data.data());
+				expected_vec.push_back(data);	
+			}
+
+			//get
+			for (auto& it : ar)
+			{
+				double* data =  it.Get<double>();
+				std::vector < double> v;
+				v.assign(data, data + it.ObjectSize() / sizeof(double));
+				actual.push_back(std::move(v));
+			}
+
+			//assert
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				auto& act_val = actual[i];
+				auto& expected_val = expected_vec[i];
+
+				Assert::IsTrue(expected_val == act_val);
+			}
+		}
+
+		TEST_METHOD(Postfix_Increment)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			AddArrayElementFromExpectedVector(ar);
+			
+			//act
+			auto el = ar[0];
+			auto postEl = el++;
+
+			//assert
+			std::vector<double> v1;
+			std::vector<double> v2;
+			v1.assign(el.Get<double>(), el.Get<double>() +el.ObjectSize() / sizeof(double));
+			v2.assign(postEl.Get<double>(), postEl.Get<double>() + postEl.ObjectSize() / sizeof(double));
+
+			Assert::IsTrue(v2 == expected[0]);
+			Assert::IsTrue(v1 == expected[1]);
+		}
+
+		TEST_METHOD(Get_Count_Doubles_If_Array_Contains_Doubles)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+
+			//act
+			size_t cnt = ar.GetCountElement<double>();
+
+			//assert
+			Assert::AreEqual(ELEMENT_SIZE, cnt);
+
+		}
+
+		TEST_METHOD(Get_RValue_Iterator_And_Write_Into_Them)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			AddArrayElementFromExpectedVector(ar);
+			
+			//act
+			ar[0].Set<double>(expected[5].data());
+
+			//assert
+			auto it = ar[0];
+			auto data = it.Get<double>();
+			std::vector<double> v;
+			v.assign(data, data + ar.GetCountElement<double>());
+
+			Assert::IsTrue(expected[5] == v);
+			
 		}
 	};
 
-	std::vector<std::vector<double>> FArrayBaseTest::expected;
-	std::vector<size_t> FArrayBaseTest::random_unique_indexes;
+	
+
+	std::vector<std::vector<double>> FArrayBaseTest_Sparse_Indexer::expected;
+	std::vector<double> FArrayBaseTest_Sparse_Indexer::expected_doubles;
+	std::vector<size_t> FArrayBaseTest_Sparse_Indexer::random_unique_indexes;
 }

@@ -2,26 +2,41 @@
 #include "..\Common\Arrays\ke_farray_base.h"
 namespace BenchMarksFArray
 {
-	static constexpr size_t ITER = 1000000;
+	static constexpr size_t ITER = 100000;
 	static std::vector<double> vec;
 	static FArrayBase<SparseIndexMapper> ar;
 	static std::fstream _fs;
+	
 
+	static size_t iter = 0;
 	void PushBackOneDoubleElementAtVector(benchmark::State& state)
 	{
 		while (state.KeepRunning())
 		{
-			double data = (double)state.range_x();
+			state.PauseTiming();
+			double data = (double)state.iterations();
+			iter++;
+			state.ResumeTiming();
+			
 			benchmark::DoNotOptimize(data);
 			vec.push_back(data);
 		}
 	}
+	
+	void SpeedIF(benchmark::State& state)
+	{
 
+		while (state.KeepRunning())
+		{
+		}
+	}
 	void WriteOneDoubleElementAtFile(benchmark::State& state)
 	{
 		while (state.KeepRunning())
 		{
-			double data = (double)state.range_x();
+			state.PauseTiming();
+			double data = (double)state.iterations();
+			state.ResumeTiming();
 			benchmark::DoNotOptimize(data);
 			_fs.write(reinterpret_cast<char*>(&data), sizeof(data));
 		}
@@ -31,7 +46,9 @@ namespace BenchMarksFArray
 	{	
 		while (state.KeepRunning())
 		{
-			double data = (double)state.range_x();
+			state.PauseTiming();
+			double data = (double)state.iterations();
+			state.ResumeTiming();
 			benchmark::DoNotOptimize(data);
 			ar.Add(&data);
 		}
@@ -41,15 +58,19 @@ namespace BenchMarksFArray
 	{
 		while (state.KeepRunning())
 		{
-			auto& data = vec[state.range_x()];
+			state.PauseTiming();
+			size_t index = (size_t)state.iterations();
+			state.ResumeTiming();
+
+			auto& data = vec[index];
 			benchmark::DoNotOptimize(data);
 		}
 	}
 	
-
+	static double data;
 	void GetElementAtIndexFormStream(benchmark::State& state)
 	{
-		double data;
+		
 		while (state.KeepRunning())
 		{
 			_fs.read((char*)&data, sizeof(data));
@@ -60,20 +81,30 @@ namespace BenchMarksFArray
 
 	void GetElementAtIndexFormFArray(benchmark::State& state)
 	{
-		double data;
 		while (state.KeepRunning())
 		{
 			ar.GetAt(state.range_x(), &data);
 			benchmark::DoNotOptimize(data);
 		}
 	}
+
+	void GetMoreThenOneElementFormArray(benchmark::State& state)
+	{
+		std::vector<double> v(10);
+		size_t i = 0;
+		while (state.KeepRunning())
+		{
+			ar.GetAt(state.range_x(), v.data(),10);
+			benchmark::DoNotOptimize(v);
+		}
+	}
 	BENCHMARK(PushBackOneDoubleElementAtVector)->Arg(ITER);
-	BENCHMARK(WriteOneDoubleElementAtFile)->Arg(ITER);
+	//BENCHMARK(WriteOneDoubleElementAtFile)->Arg(ITER);
 	BENCHMARK(AddOneDoubleElementAtFArray)->Arg(ITER);
 
-	BENCHMARK(GetElementAtIndexFormVector)->Arg(ITER);
-	BENCHMARK(GetElementAtIndexFormStream)->Arg(ITER);
-	BENCHMARK(GetElementAtIndexFormFArray)->Arg(ITER);
+	//BENCHMARK(GetElementAtIndexFormVector)->Arg(ITER);
+	//BENCHMARK(GetElementAtIndexFormStream)->Arg(ITER);
+	//BENCHMARK(GetElementAtIndexFormFArray)->Arg(ITER);
 
 }
 
@@ -81,7 +112,7 @@ int main(int argc, char** argv)
 {
 
 	using namespace BenchMarksFArray;
-
+	ar.SetObjectSize(sizeof(double));
 	std::wstring file_name;
 	wchar_t buffer[_MAX_PATH];
 	_wtmpnam_s(buffer, _countof(buffer));
@@ -92,6 +123,10 @@ int main(int argc, char** argv)
 	if (!_fs.is_open())
 		throw std::exception();
 	std::vector<double> v;
+
+
 	::benchmark::Initialize(&argc, argv);
 	::benchmark::RunSpecifiedBenchmarks();
+
+	return 0;
 }

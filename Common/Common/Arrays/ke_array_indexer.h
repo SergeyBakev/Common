@@ -9,7 +9,7 @@ public:
 	using inner_idx_type = InnerIndexType;
 
 	inline static constexpr inner_idx_type npos = static_cast<InnerIndexType>(-1);
-	inline static  constexpr external_idx_type StartIndex = 0;	
+	inline static  constexpr external_idx_type DefaultStartIndex = 0;	
 };
 
 class StandartIndexMapper : public IndexerBase<size_t, size_t, StandartIndexMapper>
@@ -29,7 +29,7 @@ public:
 
 	}
 
-	void Insert(external_idx_type external_idx)
+	void Add(external_idx_type external_idx)
 	{
 #ifdef _DEBUG
 		_ASSERT(external_idx != npos);
@@ -40,7 +40,7 @@ public:
 
 	external_idx_type First() const
 	{
-		return IsEmpty() ? npos : StartIndex;
+		return IsEmpty() ? npos : DefaultStartIndex;
 	}
 
 	external_idx_type Last() const
@@ -76,6 +76,10 @@ public:
 		return _ammount == npos;
 	}
 
+	external_idx_type CreateIndex()
+	{
+		return _ammount + 1;
+	}
 
 private:
 	size_t _ammount = npos;
@@ -86,7 +90,7 @@ class SparseIndexMapper : public IndexerBase<size_t, size_t, SparseIndexMapper>
 {
 public:
 
-	inner_idx_type GetRealIndex(external_idx_type external_idx) const
+	inner_idx_type RealIndex(external_idx_type external_idx) const
 	{
 		auto it = inner_index_to_external.find(external_idx);
 		if (it != std::end(inner_index_to_external))
@@ -96,34 +100,34 @@ public:
 		return npos;
 	}
 
-	void Insert(external_idx_type external_idx)
+	void Add(external_idx_type external_idx)
 	{
-		inner_index_to_external.insert(std::make_pair(external_idx, GetCount()));
+		inner_index_to_external.insert(std::make_pair(external_idx, Count()));
 	}
 
-	external_idx_type GetFirst() const
+	external_idx_type First() const
 	{
-		if (GetCount() == 0)
+		if (Count() == 0)
 			return npos;
 
 		return inner_index_to_external.begin()->first;
 	}
 
-	external_idx_type CreateNewIndex() const
+	external_idx_type CreateIndex() const
 	{
-		auto index = GetLast();
-		return index == npos ? StartIndex : ++index;
+		auto index = Last();
+		return index == npos ? DefaultStartIndex : ++index;
 	}
 
-	external_idx_type GetLast() const
+	external_idx_type Last() const
 	{
-		if (GetCount() == 0)
+		if (Count() == 0)
 			return npos;
 
 		return inner_index_to_external.rbegin()->first;
 	}
 
-	external_idx_type GetNext(external_idx_type external_idx) const
+	external_idx_type Next(external_idx_type external_idx) const
 	{
 		auto it = inner_index_to_external.find(external_idx);
 		if (++it != std::end(inner_index_to_external))
@@ -132,7 +136,7 @@ public:
 		return npos;
 	}
 
-	size_t GetCount() const noexcept
+	size_t Count() const noexcept
 	{
 		return inner_index_to_external.size();
 	}
