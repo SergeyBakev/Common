@@ -20,7 +20,7 @@ public:
 	{
 #ifdef _DEBUG
 		_ASSERT(external_idx != npos);
-		_ASSERT(external_idx <= _ammount);
+		_ASSERT(external_idx <= _ammount + 1);
 #endif // _DEBUG
 		if (external_idx == npos || external_idx >= Count() || external_idx < 0)
 			return npos;
