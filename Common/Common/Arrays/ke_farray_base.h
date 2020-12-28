@@ -12,6 +12,7 @@
 #include <tchar.h>
 #include "ke_array_indexer.h"
 #include "..\Helpers\StringHelper.h"
+#include "..\Helpers\DoubleHelper.h"
 
 class FArrayFileStorage
 {
@@ -191,7 +192,11 @@ public:
 	template <class Type>
 	size_t GetCountElement() const
 	{
-		return _buffer_size / sizeof(std::remove_pointer_t<std::remove_cvref_t<Type>>);
+		auto type_size = static_cast<double>(sizeof(std::remove_pointer_t<std::remove_cvref_t<Type>>));
+		auto size = static_cast<double>(_buffer_size) / type_size;
+		double remainder = modf(size, &type_size);
+		_ASSERT(DoubleHelper::Compare(remainder, 0) != 0);
+		return static_cast<size_t>(type_size);
 	}
 
 	void SetObjectSize(object_size size)
@@ -464,7 +469,7 @@ public:
 		_arr(other._arr),
 		_idx(other._idx),
 		_mapper(other._mapper),
-		_need_flush(other._need_flush)
+		_need_flush(false)
 	{
 		_ASSERT(_need_flush == false);
 	}
@@ -475,9 +480,9 @@ public:
 		_arr(other._arr),
 		_idx(other._idx),
 		_mapper(other._mapper),
-		_need_flush(other._need_flush)
+		_need_flush(_need_flush)
 	{
-		_ASSERT(_need_flush == false);
+		const_cast<FArrayBaseProxyObject&>(other)._need_flush = false;
 		_buffer.reset(malloc(_arr->GetObjectSize()));
 		memcpy(_buffer.get(), other._buffer.get(), _arr->GetObjectSize());
 		
@@ -500,16 +505,24 @@ public:
 
 	FArrayBaseProxyObject& operator=(FArrayBaseProxyObject&& other) noexcept
 	{
+		TryFlushIfDataWrite();
 		_idx = other._idx;
 		_buffer = std::move(other._buffer);
 		_arr = other._arr;
+		_need_flush = other._need_flush;
+		other._need_flush = false;
+		return *this;
 	}
 
 	FArrayBaseProxyObject& operator=(const FArrayBaseProxyObject& other)
 	{
+		TryFlushIfDataWrite();
 		_idx = other._idx;
 		memcpy(_buffer.get(), other._buffer.get(), _arr->GetObjectSize());
 		_arr = other._arr;
+		_need_flush = other._need_flush;
+		const_cast<FArrayBaseProxyObject&>(other)._need_flush = false;
+		return *this;
 	}
 
 	template <typename Type>

@@ -159,11 +159,13 @@
     <ClInclude Include="Arrays\ke_farray.h" />
     <ClInclude Include="Arrays\ke_farray_base.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Helpers\DoubleHelper.h" />
     <ClInclude Include="Helpers\StringHelper.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="Helpers\DoubleHelper.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
