@@ -365,9 +365,13 @@ protected:
 		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);
 		std::streamoff seek = sizeoffset - _current_putpos;
 
-		
-		_fs.seekp(seek, std::ios::cur);
+		auto posp = _fs.tellp();
+		auto posg = _fs.tellg();
+		if (seek != static_cast<std::streamoff>(0))
+			_fs.seekp(seek, std::ios::cur);
 
+		posp = _fs.tellp();
+		posg = _fs.tellg();
 #ifdef _DEBUG
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");
@@ -375,7 +379,8 @@ protected:
 		_fs.write(reinterpret_cast<const char*>(value), size);
 		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
 		_need_flush = true;
-
+		posp = _fs.tellp();
+		posg = _fs.tellg();
 	}
 
 	void _GetAt(const index_type& index, void* value, object_size size, size_t count) const
@@ -390,6 +395,8 @@ protected:
 		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);
 		std::streamoff seek = sizeoffset - _current_putpos;
 		
+		auto posp = _fs.tellp();
+		auto posg = _fs.tellg();
 		if(seek != static_cast<std::streamoff>(0))
 			_fs.seekg(seek, std::ios::cur);
 
@@ -397,9 +404,14 @@ protected:
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");
 #endif // DEBUG	
-		auto t = _fs.tellg();
+		posp = _fs.tellp();
+		posg = _fs.tellg();
+
 		_fs.read(reinterpret_cast<char*>(value), size * count);
 		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size) * count;
+		
+		posp = _fs.tellp();
+		posg = _fs.tellg();
 	}
 
 	void _Add(void* value, object_size size)
