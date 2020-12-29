@@ -62,8 +62,7 @@ namespace CommonTests
 			}
 
 			auto it = std::unique(std::begin(random_unique_indexes), std::end(random_unique_indexes));
-			random_unique_indexes.resize(std::distance(std::begin(random_unique_indexes), it));
-			
+			random_unique_indexes.resize(std::distance(std::begin(random_unique_indexes), it));		
 		}
 
 		TEST_METHOD(Initialize_Size)
@@ -357,6 +356,7 @@ namespace CommonTests
 				Assert::IsTrue(expected_val == act_val, msg.c_str());
 			}
 		}
+
 		//С это проблемой я столкнулся сразу же при внедрении в CFD/Stress
 		//Результати загружались поэтапно. То есть допустим index = 5, сначала в data[26] записывались по индексам(допустим 1-5). После чего обратно сохранялось в массив по index
 		//После чего в какой то момент доставался элемент index и данные дозаписывались(допустим) (6-10). По какой то причние я уменя сбоило. Причину точно уже не помню
@@ -466,6 +466,7 @@ namespace CommonTests
 				ar.SetAt(i, vec.data());
 			}
 		}
+
 		/*
 		TEST_METHOD(Add_Element_Data_Patrial_Assert_In_All_Iterations)
 		{
@@ -835,6 +836,20 @@ namespace CommonTests
 
 		}
 
+		TEST_METHOD(Get_Count_Doubles_If_Array_Contains_Int32)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(sizeof(uint32_t));
+			
+			//act
+			size_t cnt = ar.GetCountElement<double>();
+
+			//assert
+			Assert::AreEqual(ELEMENT_SIZE, cnt);
+
+		}
+
 		TEST_METHOD(Get_RValue_Iterator_And_Write_Into_Them)
 		{
 			//arrange
@@ -854,6 +869,36 @@ namespace CommonTests
 			Assert::IsTrue(expected[5] == v);
 			
 		}
+
+		//Конструкто копирования не сбрасывает данные в массив. Право сбросить передается другому обьекту
+		TEST_METHOD(Call_Copy_Constructor_Proxy_Object_When_Data_Modified)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			AddArrayElementFromExpectedVector(ar);
+		
+			{
+				//act
+				auto it2 = ar[0];
+				{
+					auto it = ar[0];
+					it.Set<double>(expected[1].data());
+					it2 = it;
+				}
+
+				//assert
+				std::vector<double> actual(ELEMENT_SIZE);
+				ar.GetAt(0, actual.data());
+				Assert::IsTrue(expected[0] == actual);
+			}
+
+			//assert
+			std::vector<double> actual(ELEMENT_SIZE);
+			ar.GetAt(0, actual.data());
+			Assert::IsTrue(expected[1] == actual);
+		}
+
 	};
 
 	
