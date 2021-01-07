@@ -15,6 +15,7 @@ namespace CommonTests
 		static std::vector<double> expected_doubles;
 		static std::vector<size_t> random_unique_indexes;
 		static constexpr size_t OBJECTS_SIZE = 10;
+
 		static void GenerateRandomVector(std::vector<double>& vec)
 		{
 			if (vec.size() != ELEMENT_SIZE)
@@ -870,7 +871,7 @@ namespace CommonTests
 			
 		}
 
-		//Конструкто копирования не сбрасывает данные в массив. Право сбросить передается другому обьекту
+		//Конструкто копирования не сбрасывает данные в массив. Право сбросить не передается другому обьекту
 		TEST_METHOD(Call_Copy_Constructor_Proxy_Object_When_Data_Modified)
 		{
 			//arrange
@@ -890,15 +891,30 @@ namespace CommonTests
 				//assert
 				std::vector<double> actual(ELEMENT_SIZE);
 				ar.GetAt(0, actual.data());
-				Assert::IsTrue(expected[0] == actual);
+				Assert::IsTrue(expected[1] == actual);
 			}
-
-			//assert
-			std::vector<double> actual(ELEMENT_SIZE);
-			ar.GetAt(0, actual.data());
-			Assert::IsTrue(expected[1] == actual);
 		}
 
+		TEST_METHOD(Verify_Algorithm_STD_Find)
+		{
+			//arrange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			AddArrayElementFromExpectedVector(ar);
+			auto& exp = expected[37];
+
+			//act
+			auto it = std::find(ar.begin(), ar.end(), exp);
+
+			//asssert
+			Assert::IsFalse(it == ar.end());
+
+			double* data = it.Get<double>();
+			DoubleVector actual;
+			std::copy(data, data + ar.GetCountElement<double>(), std::back_inserter(actual));
+
+			Assert::IsTrue(exp == actual);
+		}
 	};
 
 	

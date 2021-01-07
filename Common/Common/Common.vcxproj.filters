@@ -30,9 +30,6 @@
     <ClInclude Include="Arrays\ke_array_indexer.h">
       <Filter>Arrays</Filter>
     </ClInclude>
-    <ClInclude Include="Arrays\ke_farray.h">
-      <Filter>Arrays</Filter>
-    </ClInclude>
     <ClInclude Include="Arrays\ke_farray_base.h">
       <Filter>Arrays</Filter>
     </ClInclude>
@@ -41,6 +38,12 @@
     </ClInclude>
     <ClInclude Include="Helpers\DoubleHelper.h">
       <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="ke_type_traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Arrays\ke_typed_farray.h">
+      <Filter>Arrays</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

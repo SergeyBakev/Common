@@ -156,11 +156,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Arrays\ke_array_indexer.h" />
-    <ClInclude Include="Arrays\ke_farray.h" />
+    <ClInclude Include="Arrays\ke_typed_farray.h" />
     <ClInclude Include="Arrays\ke_farray_base.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Helpers\DoubleHelper.h" />
     <ClInclude Include="Helpers\StringHelper.h" />
+    <ClInclude Include="ke_type_traits.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <tchar.h>
 #include "ke_array_indexer.h"
+#include "..\ke_type_traits.h"
 #include "..\Helpers\StringHelper.h"
 #include "..\Helpers\DoubleHelper.h"
 
@@ -182,10 +183,11 @@ public:
 		if (!_fs.is_open())
 			throw std::exception("Clear error");
 		_mapper.Clear();
+		_current_putpos = _end_pos = 0;
 
 	}
 
-	inline size_t Count() const noexcept { return _end_pos / _buffer_size; }
+	size_t Count() const noexcept { return _end_pos / _buffer_size; }
 
 	object_size GetObjectSize()const{return _buffer_size;}
 
@@ -459,10 +461,9 @@ public:
 private:
 
 	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr, IndexMapper& mapper) :
-		_arr(arr), _idx(idx), _mapper(mapper), _need_flush(false)
+		_arr(arr), _idx(idx), _mapper(mapper)
 		
 	{
-		_buffer.reset(malloc(_arr->GetObjectSize()));
 	}
 
 	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr,std::unique_ptr<void, MemoryDeleter> ptr, IndexMapper& mapper) :
@@ -470,7 +471,6 @@ private:
 		_buffer(std::move(ptr)),
 		_mapper(mapper)
 	{
-		_buffer.reset(malloc(_arr->GetObjectSize()));
 	}
 
 public:
@@ -480,8 +480,7 @@ public:
 		_buffer(std::move(other._buffer)),
 		_arr(other._arr),
 		_idx(other._idx),
-		_mapper(other._mapper),
-		_need_flush(false)
+		_mapper(other._mapper)
 	{
 		_ASSERT(_need_flush == false);
 	}
@@ -491,13 +490,9 @@ public:
 	FArrayBaseProxyObject(const FArrayBaseProxyObject& other) :
 		_arr(other._arr),
 		_idx(other._idx),
-		_mapper(other._mapper),
-		_need_flush(_need_flush)
+		_mapper(other._mapper)
 	{
-		const_cast<FArrayBaseProxyObject&>(other)._need_flush = false;
-		_buffer.reset(malloc(_arr->GetObjectSize()));
-		memcpy(_buffer.get(), other._buffer.get(), _arr->GetObjectSize());
-		
+		const_cast<FArrayBaseProxyObject&>(other).TryFlushIfDataWrite();
 	}
 
 	FArrayBaseProxyObject& operator*()
@@ -510,6 +505,30 @@ public:
 		return _idx == other._idx;
 	}
 
+
+	template <class Type>
+	bool operator ==(const Type& other) const
+	{
+		using type = std::remove_pointer_t<std::remove_cvref_t<Type>>;
+
+		if constexpr (std::is_trivial_v<Type> == true)
+		{
+			auto v = Get<Type>();
+			return memcmp(v, &other, sizeof(*v)) == 0;
+		}
+		else if constexpr (is_vector_default_alloc<type>::value == true)
+		{
+			type vec{};
+			auto data = Get<typename type::value_type>();
+			std::copy(data, data + _arr->GetCountElement<typename type::value_type>(), std::back_inserter(vec));
+			return vec == other;
+		}
+		else
+			static_assert(false, "operator == not suported for Type");
+
+		return false;
+	}
+	
 	bool operator !=(const FArrayBaseProxyObject& other) const
 	{
 		return !this->operator==(other);
@@ -528,19 +547,19 @@ public:
 
 	FArrayBaseProxyObject& operator=(const FArrayBaseProxyObject& other)
 	{
+		const_cast<FArrayBaseProxyObject&>(other).TryFlushIfDataWrite();
 		TryFlushIfDataWrite();
 		_idx = other._idx;
-		memcpy(_buffer.get(), other._buffer.get(), _arr->GetObjectSize());
 		_arr = other._arr;
-		_need_flush = other._need_flush;
-		const_cast<FArrayBaseProxyObject&>(other)._need_flush = false;
+		
 		return *this;
 	}
 
-	template <typename Type>
-	std::remove_pointer_t<std::remove_cvref_t<Type>>* Get() const
-	{
-		return (std::remove_pointer_t<std::remove_cvref_t<Type>>*)Get();
+	template <typename Type, typename RetType = std::remove_pointer_t<std::remove_cvref_t<Type>>>
+	RetType* Get() const
+	{	
+		static_assert(std::is_trivial_v<RetType>, "Get<type> only for trivial data");
+		return (RetType*)Get();
 	}
 
 	void* Get() const
@@ -548,19 +567,19 @@ public:
 		return GetData_(_idx);
 	}
 
-	template <typename Type>
-	void Set(std::remove_pointer_t<std::remove_cvref_t<Type>>* object)
+	template <typename Type, typename RetType = std::remove_pointer_t<std::remove_cvref_t<Type>>>
+	void Set(RetType* object)
 	{
-		using type = std::remove_pointer_t<std::remove_cvref_t<Type>>;
-#ifdef _DEBUG
-		_ASSERT((sizeof(type) * _arr->GetCountElement<type>()) == ObjectSize());
-#endif // _DEBUG
-
+		static_assert(std::is_trivial_v<RetType>, "Get<type> only for trivial data");
+		_ASSERT((sizeof(RetType) * _arr->GetCountElement<RetType>()) == ObjectSize());
 		Set(object);
 	}
 
 	void Set(void* object)
 	{
+		if (_buffer == nullptr)
+			_buffer.reset(malloc(_arr->GetObjectSize()));
+
 		memcpy(_buffer.get(), object, _arr->GetObjectSize());
 		_need_flush = true;
 	}
@@ -589,10 +608,11 @@ private:
 
 	void* GetData_(size_t idx) const
 	{
-#ifdef _DEBUG
+		if (_buffer == nullptr)
+			_buffer.reset(malloc(_arr->GetObjectSize()));
+
 		_ASSERT(_idx >= 0 && _idx != IndexMapper::npos);
 		_ASSERT(_idx < _arr->Count());
-#endif 
 		_arr->GetAt(_idx, _buffer.get());
 		return _buffer.get();
 	}
@@ -606,14 +626,14 @@ private:
 		}
 	}
 
+
 private:
-	std::unique_ptr<void, MemoryDeleter> _buffer;
+	mutable std::unique_ptr<void, MemoryDeleter> _buffer;
 	FArrayBase<IndexMapper>* _arr;
 	IndexMapper& _mapper;
 	index_type _idx;
-	bool _need_flush;
+	bool _need_flush = false;
 };
 
 
 using SparseFArray = FArrayBase<SparseIndexMapper>;
-using FArray = FArrayBase<StandartIndexMapper>;
