@@ -10,6 +10,7 @@
 #include <map>
 #include <filesystem>
 #include <tchar.h>
+#include <utility>
 #include "ke_array_indexer.h"
 #include "..\ke_type_traits.h"
 #include "..\Helpers\StringHelper.h"
@@ -100,30 +101,16 @@ public:
 		return true;
 	}
 
-	bool AssignExsitArray(const TCHAR* file_name, bool isTemp = false)
-	{
-		TryDestroy();
-		int mode = std::ios::in | std::ios::out | std::ios::binary;
-		_fs.open(file_name, mode);
-		if (!_fs.is_open())
-			return false;
-
-		SetTemporary(isTemp);
-		_file_name = file_name;
-
-		if (!IsTemporary())
-			FArrayFileStorage::AddTemporaryFile(file_name);
-		return false;
-	}
-
 	void Add(void* value)
 	{
 		Add(value, _buffer_size);
 	}
 
-	//value - data for write
-	//size - size of the write object
-	//count - count of the write objects
+	/*
+	value - data for write
+	size - size of the write object
+	count - count of the write objects
+	*/
 	void Add(void* value, object_size size, size_t count)
 	{
 		Add(value, size * count);
@@ -145,10 +132,12 @@ public:
 		_ReplaceAtOrAdd(idx, storage, size);
 	}
 
-	//index - pos for get
-	//storage - container for read data
-	//size - size of the read object
-	//count - count of the read objects
+	/*
+	index - pos for get
+	storage - container for read data
+	size - size of the read object
+	count - count of the read objects
+	*/
 	void GetAt(const index_type& index, void* storage, const object_size& size, size_t count) const
 	{
 		if (!Contains(index))
@@ -187,7 +176,7 @@ public:
 
 	}
 
-	size_t Count() const noexcept { return _end_pos / _buffer_size; }
+	size_t Count() const noexcept { return _mapper.Count(); }
 
 	object_size GetObjectSize()const{return _buffer_size;}
 
@@ -334,6 +323,9 @@ protected:
 			if (IsTemporary())
 				_wremove(_file_name.c_str());
 
+			_end_pos = _current_putpos = 0;
+			_need_flush = false;
+			_mapper.Clear();
 			_file_name = _T("");
 		}
 	}
@@ -372,13 +364,8 @@ protected:
 		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);
 		std::streamoff seek = sizeoffset - _current_putpos;
 
-		auto posp = _fs.tellp();
-		auto posg = _fs.tellg();
 		if (seek != static_cast<std::streamoff>(0))
 			_fs.seekp(seek, std::ios::cur);
-
-		posp = _fs.tellp();
-		posg = _fs.tellg();
 #ifdef _DEBUG
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");
@@ -386,8 +373,6 @@ protected:
 		_fs.write(reinterpret_cast<const char*>(value), size);
 		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
 		_need_flush = true;
-		posp = _fs.tellp();
-		posg = _fs.tellg();
 	}
 
 	void _GetAt(const index_type& index, void* value, object_size size, size_t count) const
@@ -401,9 +386,6 @@ protected:
 		_ASSERT(size != 0);
 		std::streamoff sizeoffset = static_cast<std::streamoff>(index * size);
 		std::streamoff seek = sizeoffset - _current_putpos;
-		
-		auto posp = _fs.tellp();
-		auto posg = _fs.tellg();
 		if(seek != static_cast<std::streamoff>(0))
 			_fs.seekg(seek, std::ios::cur);
 
@@ -411,14 +393,9 @@ protected:
 		if (_fs.fail())
 			throw std::exception("Stream has invalid state");
 #endif // DEBUG	
-		posp = _fs.tellp();
-		posg = _fs.tellg();
 
 		_fs.read(reinterpret_cast<char*>(value), size * count);
 		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size) * count;
-		
-		posp = _fs.tellp();
-		posg = _fs.tellg();
 	}
 
 	void _Add(void* value, object_size size)
@@ -457,21 +434,10 @@ public:
 	using index_type = typename IndexMapper::external_idx_type;
 	using inner_index_type = typename IndexMapper::inner_idx_type;
 	struct MemoryDeleter { void operator()(void* mem) { free(mem); } };
-
-private:
-
-	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr, IndexMapper& mapper) :
-		_arr(arr), _idx(idx), _mapper(mapper)
-		
-	{
-	}
-
-	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr,std::unique_ptr<void, MemoryDeleter> ptr, IndexMapper& mapper) :
-		_arr(arr), _idx(idx),
-		_buffer(std::move(ptr)),
-		_mapper(mapper)
-	{
-	}
+	using value_type = FArrayBaseProxyObject;
+	using difference_type = FArrayBaseProxyObject;
+	using pointer = FArrayBaseProxyObject*;
+	using reference = FArrayBaseProxyObject&;
 
 public:
 	FArrayBaseProxyObject() = delete;
@@ -495,38 +461,26 @@ public:
 		const_cast<FArrayBaseProxyObject&>(other).TryFlushIfDataWrite();
 	}
 
-	FArrayBaseProxyObject& operator*()
+	reference operator*()
+	{
+		return *this;
+	}
+
+	reference operator*() const
 	{
 		return *this;
 	}
 
 	bool operator ==(const FArrayBaseProxyObject& other) const
 	{
-		return _idx == other._idx;
+		return Equals(other);
 	}
 
 
 	template <class Type>
 	bool operator ==(const Type& other) const
 	{
-		using type = std::remove_pointer_t<std::remove_cvref_t<Type>>;
-
-		if constexpr (std::is_trivial_v<Type> == true)
-		{
-			auto v = Get<Type>();
-			return memcmp(v, &other, sizeof(*v)) == 0;
-		}
-		else if constexpr (is_vector_default_alloc<type>::value == true)
-		{
-			type vec{};
-			auto data = Get<typename type::value_type>();
-			std::copy(data, data + _arr->GetCountElement<typename type::value_type>(), std::back_inserter(vec));
-			return vec == other;
-		}
-		else
-			static_assert(false, "operator == not suported for Type");
-
-		return false;
+		return Equals(other);
 	}
 	
 	bool operator !=(const FArrayBaseProxyObject& other) const
@@ -534,7 +488,7 @@ public:
 		return !this->operator==(other);
 	}
 
-	FArrayBaseProxyObject& operator=(FArrayBaseProxyObject&& other) noexcept
+	reference operator=(FArrayBaseProxyObject&& other) noexcept
 	{
 		TryFlushIfDataWrite();
 		_idx = other._idx;
@@ -545,7 +499,7 @@ public:
 		return *this;
 	}
 
-	FArrayBaseProxyObject& operator=(const FArrayBaseProxyObject& other)
+	reference operator=(const FArrayBaseProxyObject& other)
 	{
 		const_cast<FArrayBaseProxyObject&>(other).TryFlushIfDataWrite();
 		TryFlushIfDataWrite();
@@ -584,14 +538,14 @@ public:
 		_need_flush = true;
 	}
 
-	FArrayBaseProxyObject& operator++()
+	reference operator++()
 	{
 		TryFlushIfDataWrite();
 		_idx = _mapper.Next(_idx);
 		return *this;
 	}
 
-	FArrayBaseProxyObject operator++(int)
+	value_type operator++(int)
 	{
 		auto tmp = *this;
 		this->operator++();
@@ -599,12 +553,52 @@ public:
 		
 	}
 
+	template <class Type>
+	bool Equals(const Type& other) const
+	{
+		using type = std::remove_pointer_t<std::remove_cvref_t<Type>>;
+
+		if constexpr (std::is_trivial_v<Type>)
+		{
+			auto v = Get<Type>();
+			return memcmp(v, &other, sizeof(*v)) == 0;
+		}
+		else if constexpr (is_vector_default_alloc<type>::value)
+		{
+			type vec{};
+			auto data = Get<typename type::value_type>();
+			std::copy(data, data + _arr->GetCountElement<typename type::value_type>(), std::back_inserter(vec));
+			return vec == other;
+		}
+		else if constexpr (std::is_same_v<FArrayBaseProxyObject, Type> || std::is_base_of_v< FArrayBaseProxyObject, Type>)
+		{
+			return reinterpret_cast<const FArrayBaseProxyObject&>(other)._idx == _idx;
+		}
+		else
+			static_assert(false, "operator == not suported for Type");
+
+		return false;
+	}
+
 	~FArrayBaseProxyObject()
 	{
 		TryFlushIfDataWrite();
 	}
 
-private:
+protected:
+
+	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr, IndexMapper& mapper) :
+		_arr(arr), _idx(idx), _mapper(mapper)
+
+	{
+	}
+
+	FArrayBaseProxyObject(index_type idx, FArrayBase<IndexMapper>* arr, std::unique_ptr<void, MemoryDeleter> ptr, IndexMapper& mapper) :
+		_arr(arr), _idx(idx),
+		_buffer(std::move(ptr)),
+		_mapper(mapper)
+	{
+	}
 
 	void* GetData_(size_t idx) const
 	{

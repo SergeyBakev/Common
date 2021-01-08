@@ -659,7 +659,7 @@ namespace CommonTests
 			Assert::IsTrue(actual == expected_doubles);
 		}
 
-		TEST_METHOD(Get_Begin_Iterator_If_Array_And_Try_Get_Data)
+		TEST_METHOD(Get_Begin_Iterator_If_Array_Empty_And_Try_Get_Data)
 		{
 			//arrange
 			FArrayBase ar;
@@ -915,6 +915,127 @@ namespace CommonTests
 
 			Assert::IsTrue(exp == actual);
 		}
+
+		TEST_METHOD(Clear_And_Add_Again)
+		{
+			//arange
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			AddArrayElementFromExpectedVector(ar);
+			DoubleVector vec(ELEMENT_SIZE);
+			//act
+			ar.Clear();
+			AddArrayElementFromExpectedVector(ar);
+
+			//assert
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				auto& act_val = expected[i];
+				ar.GetAt(i, vec.data());
+				auto& expected_val = vec;
+
+				auto line = StringHelper::Concatenate(L" ", "Data at index: ", i, "invalid");
+				Assert::IsTrue(expected_val == act_val, line.c_str());
+			}
+
+		}
+
+		TEST_METHOD(Verify_Array_File_Deleted)
+		{
+			//arange	
+			std::wstring file_name;
+
+			//act
+			{	
+				FArrayBase ar;
+				ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+				file_name = ar.GetFileName();
+				AddArrayElementFromExpectedVector(ar);
+				
+			}
+
+			bool ret = std::filesystem::exists(file_name);
+			//assert
+			Assert::IsFalse(ret);
+			
+		}
+
+		TEST_METHOD(Verify_Array_File_Is_Not_Deleted)
+		{
+			//arange	
+			std::wstring file_name;
+
+			//act
+			{
+				FArrayBase ar;
+				ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+				file_name = ar.GetFileName();
+				AddArrayElementFromExpectedVector(ar);
+				ar.SetTemporary(false);
+
+			}
+
+			bool ret = std::filesystem::exists(file_name);
+
+			//assert
+			Assert::IsTrue(ret);
+		}
+
+
+		TEST_METHOD(CreateNew_If_Array_Has_Data)
+		{
+			//arange
+			std::wstring file_name;
+			std::wstring new_file_name = L"Test.bin";
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			file_name = ar.GetFileName();
+			AddArrayElementFromExpectedVector(ar);
+
+			//act
+			ar.CreateNew(new_file_name.c_str(), false);
+
+			//assert
+			bool ret = std::filesystem::exists(file_name);
+
+			Assert::AreEqual((size_t)0, ar.Count());
+			Assert::IsFalse(ar.Contains(0));
+			Assert::IsFalse(ret);
+		}
+
+		TEST_METHOD(CreateNew_After_Add_Data_And_Add_Again)
+		{
+			//arange
+			std::wstring file_name;
+			std::wstring new_file_name = L"Test.bin";
+			DoubleVector vec(ELEMENT_SIZE);
+			FArrayBase ar;
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+			file_name = ar.GetFileName();
+			AddArrayElementFromExpectedVector(ar);
+
+			//act
+			ar.CreateNew(new_file_name.c_str(), false);
+			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+
+			AddArrayElementFromExpectedVector(ar);
+
+			//assert
+			bool ret = std::filesystem::exists(file_name);
+			Assert::IsFalse(ret);
+
+			for (size_t i = 0; i < SIZE; i++)
+			{
+				auto& act_val = expected[i];
+				ar.GetAt(i, vec.data());
+				auto& expected_val = vec;
+
+				auto line = StringHelper::Concatenate(L" ", "Data at index: ", i, "invalid");
+				Assert::IsTrue(expected_val == act_val, line.c_str());
+			}
+		}
+
+
 	};
 
 	

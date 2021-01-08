@@ -76,32 +76,44 @@ void test2()
 
 
 }
+
+template <class T,class U>
+class A
+{
+public:
+	int _i;
+	template <class Type>
+	bool Equals(const Type& t) { return false; };
+
+	template<>
+	bool Equals<A>(const A& t) { return _i == t._i; }
+};
 int main()
 {
-	test2();
-    FArrayBase<StandartIndexMapper> ar;
-    ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
-	std::vector<double> vec(ELEMENT_SIZE);
-	std::vector<double> vec1(ELEMENT_SIZE);
+	//test2();
+ //   FArrayBase<StandartIndexMapper> ar;
+ //   ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
+	//std::vector<double> vec(ELEMENT_SIZE);
+	//std::vector<double> vec1(ELEMENT_SIZE);
 
-	//act
-	for (size_t i = 0; i < SIZE; i++)
-	{
-		for (size_t j = 0; j < 5; j++)
-			vec1[j] = (double)i;
+	////act
+	//for (size_t i = 0; i < SIZE; i++)
+	//{
+	//	for (size_t j = 0; j < 5; j++)
+	//		vec1[j] = (double)i;
 
-		ar.SetAt(i, vec1.data());
-	}
-    
-	for (size_t i = 0; i < SIZE; i++)
-	{
-		ar.GetAt(i, vec.data());
-		for (size_t j = 5; j < 10; j++)
-			vec[j] = (double)j;
+	//	ar.SetAt(i, vec1.data());
+	//}
+ //   
+	//for (size_t i = 0; i < SIZE; i++)
+	//{
+	//	ar.GetAt(i, vec.data());
+	//	for (size_t j = 5; j < 10; j++)
+	//		vec[j] = (double)j;
 
 
-		ar.SetAt(i, vec.data());
-	}
+	//	ar.SetAt(i, vec.data());
+	//}
 }
 
 
