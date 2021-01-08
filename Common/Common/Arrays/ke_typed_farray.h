@@ -87,11 +87,13 @@ public:
 
 	reference operator*()
 	{
+		this->_need_flush = true;
 		return *(this->template Get<value_type>());
 	}
 
 	reference operator*() const
 	{
+		this->_need_flush = true;
 		return  *(this->template Get<value_type>());
 	}
 

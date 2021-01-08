@@ -620,8 +620,6 @@ protected:
 		}
 	}
 
-
-private:
 	mutable std::unique_ptr<void, MemoryDeleter> _buffer;
 	FArrayBase<IndexMapper>* _arr;
 	IndexMapper& _mapper;
