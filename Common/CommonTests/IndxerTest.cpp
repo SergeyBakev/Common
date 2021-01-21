@@ -302,6 +302,37 @@ namespace CommonTests
 			Assert::AreEqual(real, random_index);			
 		}
 
+		TEST_METHOD(Serialize_Deserialize)
+		{
+			//arrange
+			StandartIndexMapper indexer;
+			const size_t COUNT = rand() % 1000;
+			for (size_t i = 0; i < COUNT; i++)
+				indexer.Add(indexer.CreateIndex());
+
+			std::wstring file_name = L"tmp.bin";
+			std::ofstream fs_out(file_name);
+			if (!fs_out.is_open())
+				Assert::Fail(L"Open file fail");
+
+			//act
+			StandartIndexMapper indexer2;
+			indexer.Serialize(fs_out);
+			fs_out.close();
+
+			std::ifstream fs_in(file_name);
+			if (!fs_in.is_open())
+				Assert::Fail(L"Open file fail");
+
+			indexer2.Deserialize(fs_in);
+
+			//assert
+			Assert::AreEqual(indexer.Count(), indexer2.Count());
+			Assert::AreEqual(indexer.First(), indexer2.First());
+			Assert::AreEqual(indexer.Last(), indexer2.Last());
+			Assert::AreEqual(indexer.RealIndex(indexer.First()), indexer2.RealIndex(indexer2.First()));
+		}
+
 	};
 
 	TEST_CLASS(SparseIndexerTest)
@@ -512,6 +543,36 @@ namespace CommonTests
 			//act
 
 			//assert
+		}
+
+		TEST_METHOD(Serialize_Deserialize)
+		{
+			//arrange
+			SparseIndexMapper indexer;
+			for (auto& i : random_unique_indexes)
+				indexer.Add(i);
+
+			std::wstring file_name = L"tmp2.bin";
+			std::ofstream fs_out(file_name);
+			if (!fs_out.is_open())
+				Assert::Fail(L"Open file fail");
+
+			//act
+			SparseIndexMapper indexer2;
+			indexer.Serialize(fs_out);
+			fs_out.close();
+
+			std::ifstream fs_in(file_name,std::ios::binary | std::ios::in);
+			if (!fs_in.is_open())
+				Assert::Fail(L"Open file fail");
+
+			indexer2.Deserialize(fs_in);
+
+			//assert
+			Assert::AreEqual(indexer.Count(), indexer2.Count());
+			Assert::AreEqual(indexer.First(), indexer2.First());
+			Assert::AreEqual(indexer.Last(), indexer2.Last());
+			Assert::AreEqual(indexer.RealIndex(indexer.First()), indexer2.RealIndex(indexer2.First()));
 		}
 	};
 

@@ -42,15 +42,7 @@ namespace CommonTests
 			}
 		}
 
-		TEST_METHOD(Initialize)
-		{
-			//arrange
-
-			//act
-
-			//assert
-
-		}
+		
 	};
 
 	std::vector<std::vector<double>> FArrayBaseTest_Standart_Indexer::expected;

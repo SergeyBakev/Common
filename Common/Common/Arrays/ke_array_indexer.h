@@ -80,6 +80,16 @@ public:
 		_ammount = npos;
 	}
 
+	void Serialize(std::ofstream& storage) const
+	{
+		storage.write(reinterpret_cast<const char*>(&_ammount), sizeof(_ammount));
+	}
+
+	void Deserialize(std::ifstream& storage)
+	{
+		storage.read(reinterpret_cast<char*>(&_ammount), sizeof(_ammount));
+		
+	}
 private:
 	size_t _ammount = npos;
 
