@@ -7,6 +7,7 @@
 #ifndef PCH_H
 #define PCH_H
 #include <vector>
+#include <set>
 #include <algorithm>
 #include "..\Common\Arrays\ke_farray_base.h"
 #include "..\Common\Arrays\ke_typed_farray.h"

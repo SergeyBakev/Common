@@ -149,7 +149,7 @@ namespace CommonTests
 			ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
 			std::vector<std::vector<double>> actual;
 			std::vector<std::vector<double>> expeted_vec;
-			std::vector<double> vec(ELEMENT_SIZE);
+			std::vector<double> vec(ar.GetCountElement<double>());
 			AddArrayElementFromExpectedVector(ar);
 
 			//act
@@ -847,8 +847,7 @@ namespace CommonTests
 			size_t cnt = ar.GetCountElement<double>();
 
 			//assert
-			Assert::AreEqual(ELEMENT_SIZE, cnt);
-
+			Assert::AreEqual((size_t)0, cnt);
 		}
 
 		TEST_METHOD(Get_RValue_Iterator_And_Write_Into_Them)

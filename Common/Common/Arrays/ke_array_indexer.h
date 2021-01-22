@@ -50,13 +50,13 @@ public:
 	{
 		_ASSERT((external_idx) != npos);
 		_ASSERT((external_idx + 1 ) != Count());
-		return IsEmpty() || external_idx + 1 == Count() ? npos : external_idx + 1;
+		_ASSERT((external_idx) <= Count());
+		return IsEmpty() || external_idx + 1 == Count() || external_idx >= Count() ? npos : external_idx + 1;
 	}
 
 	external_idx_type Prev(external_idx_type external_idx)
 	{
 		_ASSERT((external_idx - 1) != npos);
-		_ASSERT((external_idx -1 ) != npos);
 		return IsEmpty() ? npos : external_idx - 1;
 	}
 
@@ -112,7 +112,14 @@ public:
 	void Add(external_idx_type external_idx)
 	{
 		_ASSERT(external_idx != npos);
+#ifdef _DEBUG
+		const auto& [it, is_inserted] = inner_index_to_external.insert(std::make_pair(external_idx, Count()));
+		_ASSERT(is_inserted != false);
+#else
 		inner_index_to_external.insert(std::make_pair(external_idx, Count()));
+#endif // _DEBUG
+
+		
 	}
 
 	external_idx_type First() const

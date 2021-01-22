@@ -1,16 +1,9 @@
 #pragma once
 #include <string>
-#include <functional>
 #include <fstream>
-#include <filesystem>
-#include <memory>
-#include <cmath>
 #include <vector>
-#include <stdint.h>
-#include <map>
 #include <filesystem>
 #include <tchar.h>
-#include <utility>
 #include "ke_array_indexer.h"
 #include "..\ke_type_traits.h"
 #include "..\Helpers\StringHelper.h"
