@@ -19,6 +19,9 @@
     <Filter Include="Helpers">
       <UniqueIdentifier>{e6e343d7-7723-4239-8095-f67c9088094c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Algorithms">
+      <UniqueIdentifier>{327d4a67-c6ea-4140-8286-99b456b10c75}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -45,6 +48,9 @@
     <ClInclude Include="Arrays\ke_typed_farray.h">
       <Filter>Arrays</Filter>
     </ClInclude>
+    <ClInclude Include="Algorithm\ke_algorithm.h">
+      <Filter>Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -55,6 +61,9 @@
     </ClCompile>
     <ClCompile Include="Helpers\DoubleHelper.cpp">
       <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="Algorithm\ke_algorithm.cpp">
+      <Filter>Algorithms</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

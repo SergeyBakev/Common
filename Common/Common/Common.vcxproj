@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Algorithm\ke_algorithm.h" />
     <ClInclude Include="Arrays\ke_array_indexer.h" />
     <ClInclude Include="Arrays\ke_typed_farray.h" />
     <ClInclude Include="Arrays\ke_farray_base.h" />
@@ -165,6 +166,7 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Algorithm\ke_algorithm.cpp" />
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="Helpers\DoubleHelper.cpp" />
     <ClCompile Include="pch.cpp">

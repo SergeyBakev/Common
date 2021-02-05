@@ -163,6 +163,7 @@
     <ClCompile Include="FArrayBase_Sparse_Indexer.cpp" />
     <ClCompile Include="FArray_Base_Standart_Indexer.cpp" />
     <ClCompile Include="IndxerTest.cpp" />
+    <ClCompile Include="Ke_Alogorithm_Test.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
