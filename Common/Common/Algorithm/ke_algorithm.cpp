@@ -1,6 +1,6 @@
 #include "pch.h"
 #include <cwctype>
-
+#include <boost/algorithm/string.hpp>
 #include "ke_algorithm.h"
 
 namespace Common
@@ -9,6 +9,7 @@ namespace Common
 	{
 		namespace string
 		{
+			static std::wstring_view  emptyWord = L" ";
 			std::vector<std::wstring> Split(std::wstring_view delim, std::wstring_view str, StringSplitOptinos options)
 			{
 				std::vector<std::wstring> ret;
@@ -17,7 +18,7 @@ namespace Common
 				while ((pos = local.find(delim)) != std::wstring::npos)
 				{
 					std::wstring token = local.substr(0, pos);
-					if (token.empty() && options == StringSplitOptinos::eRemoveEmpty)
+					if (token == emptyWord && options == StringSplitOptinos::eRemoveEmpty)
 						continue;
 
 					ret.push_back(token);
@@ -26,12 +27,22 @@ namespace Common
 				if (local != L"") ret.push_back(local);
 				return ret;
 			}
+
+			std::vector<std::wstring> Split2(std::wstring_view delim, std::wstring_view str, StringSplitOptinos options)
+			{
+				std::vector<std::wstring> ret;
+				boost::algorithm::split(ret, str, boost::is_any_of(delim));
+				return ret;
+			}
+
 			void ltrim_local(std::string& s)
 			{
+				
 				s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
 					return !std::isspace(ch);
 					}));
 			}
+
 
 			void ltrim_local(std::wstring& s)
 			{

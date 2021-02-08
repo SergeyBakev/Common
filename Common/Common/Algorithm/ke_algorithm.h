@@ -11,6 +11,7 @@ namespace Common
 			enum class StringSplitOptinos{eTrimed/*not implemented*/, eRemoveEmpty, eNone};
 
 			std::vector<std::wstring> Split(std::wstring_view delim, std::wstring_view str, StringSplitOptinos options = StringSplitOptinos::eNone);
+			std::vector<std::wstring> Split2(std::wstring_view delim, std::wstring_view str, StringSplitOptinos options = StringSplitOptinos::eNone);
 
 			// trim from start (in place)
 			inline void ltrim_local(std::string& s); 
@@ -38,9 +39,11 @@ namespace Common
 
 			template <class Converter>
 			auto Split(std::wstring_view delim, std::wstring_view str, Converter converter, StringSplitOptinos options = StringSplitOptinos::eNone)
-			{
-				std::vector<decltype(converter(L""))> ret;
-
+			{		
+				auto lexems = Split(delim, str, options);
+				std::vector<decltype(converter(L""))> ret(lexems.size());
+				for (auto& lexem : lexems)
+					ret.push_back(converter(lexem));
 
 				return ret;
 			}

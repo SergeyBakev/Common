@@ -11,6 +11,7 @@
 #include "..\Common\Arrays\ke_farray_base.h"
 #include "..\Common\Arrays\ke_typed_farray.h"
 #include "..\Common\ke_type_traits.h"
+#include "..\Common\Algorithm\ke_algorithm.h"
 #include "..\Common\Helpers\StringHelper.h"
 #include "..\Common\Arrays\ke_array_indexer.h"
 

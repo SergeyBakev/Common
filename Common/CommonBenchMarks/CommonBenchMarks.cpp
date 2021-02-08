@@ -1,5 +1,7 @@
 #include "benchmark/benchmark.h"
 #include "..\Common\Arrays\ke_farray_base.h"
+#include "..\Common\Algorithm\ke_algorithm.h"
+
 namespace BenchMarksFArray
 {
 	static constexpr size_t ITER = 100000;
@@ -98,9 +100,33 @@ namespace BenchMarksFArray
 			benchmark::DoNotOptimize(v);
 		}
 	}
-	BENCHMARK(PushBackOneDoubleElementAtVector)->Arg(ITER);
+
+	static std::wstring  test = L"1.3.3.4.6.7.8.9.0.1.345.3456.657";
+
+	void SplitStl(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto ret  = Common::algorithms::string::Split(L".", test);
+			benchmark::DoNotOptimize(ret);
+		}
+	}
+
+	void SplitBoost(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto ret = Common::algorithms::string::Split2(L".", test);
+			benchmark::DoNotOptimize(ret);
+		}
+	}
+
+	BENCHMARK(SplitStl)->Arg(ITER);
+	BENCHMARK(SplitBoost)->Arg(ITER);
+
+	//BENCHMARK(PushBackOneDoubleElementAtVector)->Arg(ITER);
 	//BENCHMARK(WriteOneDoubleElementAtFile)->Arg(ITER);
-	BENCHMARK(AddOneDoubleElementAtFArray)->Arg(ITER);
+	//BENCHMARK(AddOneDoubleElementAtFArray)->Arg(ITER);
 
 	//BENCHMARK(GetElementAtIndexFormVector)->Arg(ITER);
 	//BENCHMARK(GetElementAtIndexFormStream)->Arg(ITER);
