@@ -49,6 +49,11 @@ public:
 
 	iterator end() { return iterator(Base::end()); }
 
+	value_type operator [](index_type idx)
+	{
+		return GetAt(idx);
+	}
+
 	using Base::Count;
 
 	using Base::GetMapper;
@@ -76,7 +81,6 @@ public:
 	template <class,class> friend class FArray;
 	using index_type = typename IndexMapper::external_idx_type;
 	using inner_index_type = typename IndexMapper::inner_idx_type;
-	struct MemoryDeleter { void operator()(void* mem) { free(mem); } };
 	using value_type = T;
 	using pointer = value_type*;
 	using reference = value_type&;

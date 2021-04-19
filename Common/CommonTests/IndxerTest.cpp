@@ -210,6 +210,19 @@ namespace CommonTests
 			Assert::AreEqual(StandartIndexMapper::npos,actual_idx3);
 		}
 
+		TEST_METHOD(Get_Next_When_Index_More_Them_Element_Count_In_Mapper)
+		{
+			//arrange
+			StandartIndexMapper mapper;
+			mapper.Add(0);
+
+			//act
+			auto idx = mapper.Next(5);
+
+			//assert
+			Assert::AreEqual(idx, StandartIndexMapper::npos);
+		}
+
 		TEST_METHOD(Get_Prev)
 		{
 			StandartIndexMapper indexer;
@@ -343,15 +356,15 @@ namespace CommonTests
 
 		TEST_CLASS_INITIALIZE(ClassInitialize)
 		{
+			std::set<size_t> idx;
 			srand((uint32_t)time(nullptr));
 			for (size_t i = 0; i < SIZE; i++)
 			{
 				size_t indexes = rand() % SIZE;
-				random_unique_indexes.push_back(indexes);
+				idx.insert(indexes);
 			}
 
-			auto it = std::unique(std::begin(random_unique_indexes), std::end(random_unique_indexes));
-			random_unique_indexes.resize(std::distance(std::begin(random_unique_indexes), it));
+			random_unique_indexes.assign(std::begin(idx), std::end(idx));
 		}
 
 		TEST_METHOD(If_Empty_Get_Firsty)
@@ -411,7 +424,7 @@ namespace CommonTests
 			bool empty = mapper.IsEmpty();
 
 			//assert
-			Assert::AreEqual(SparseIndexMapper::npos, cnt);
+			Assert::AreEqual((size_t)0, cnt);
 			Assert::AreEqual(true, empty);
 		}
 
@@ -553,7 +566,7 @@ namespace CommonTests
 				indexer.Add(i);
 
 			std::wstring file_name = L"tmp2.bin";
-			std::ofstream fs_out(file_name);
+			std::ofstream fs_out(file_name, std::ios::binary | std::ios::out);
 			if (!fs_out.is_open())
 				Assert::Fail(L"Open file fail");
 
