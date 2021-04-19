@@ -168,7 +168,7 @@ namespace CommonTests
 				expeted_vec.push_back(v);
 			}
 
-			//asssert
+			//assert
 			Assert::AreEqual(expeted_vec.size(), actual.size());
 
 			for (size_t i = 0; i < SIZE; i++)
@@ -631,7 +631,7 @@ namespace CommonTests
 
 			//act
 			ar.Clear();
-			auto func = [&]() {ar.GetAt(0, actual.data()); };
+			const auto func = [&]() {ar.GetAt(0, actual.data()); };
 			Assert::ExpectException<std::out_of_range>(func);
 		}
 
@@ -667,7 +667,7 @@ namespace CommonTests
 
 			//act
 			auto it = ar.begin();
-			Assert::ExpectException<std::out_of_range>([&]() {it.Get<double>(); });
+			Assert::ExpectException<std::out_of_range>([&]() {reinterpret_cast<void*>(it.Get<double>()); });
 
 		}
 		TEST_METHOD(Get_Begin_Iterator)

@@ -506,7 +506,7 @@ public:
 	RetType* Get() const
 	{	
 		static_assert(std::is_trivial_v<RetType>, "Get<type> only for trivial data");
-		return (RetType*)Get();
+		return reinterpret_cast<RetType*>(Get());
 	}
 
 	void* Get() const
