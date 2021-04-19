@@ -80,15 +80,15 @@ public:
 			throw std::exception();
 	}
 
-	FArrayBase(object_size size) : FArrayBase()
+	explicit FArrayBase(const object_size size) : FArrayBase()
 	{
 		_buffer_size = size;
 	}
 
-	bool CreateNew(const TCHAR* file_name, bool isTemp = true)
+	bool CreateNew(const TCHAR* file_name, const bool isTemp = true)
 	{
 		TryDestroy();
-		int mode = std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc;
+		const int mode = std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc;
 		_fs.open(file_name, mode);
 		if (!_fs.is_open())
 			return false;
@@ -111,12 +111,12 @@ public:
 	size - size of the write object
 	count - count of the write objects
 	*/
-	void Add(void* value, object_size size, size_t count)
+	void Add(void* value, const object_size size, const size_t count)
 	{
 		Add(value, size * count);
 	}
 
-	void Add(void* value, object_size size)
+	void Add(void* value, const object_size size)
 	{
 		_mapper.Add(_mapper.CreateIndex());
 		_Add(value, size);
@@ -127,7 +127,7 @@ public:
 		SetAt(idx, object, _buffer_size);
 	}
 
-	void SetAt(const index_type& idx, void* storage, object_size size)
+	void SetAt(const index_type& idx, void* storage, const object_size size)
 	{
 		_ReplaceAtOrAdd(idx, storage, size);
 	}
@@ -138,7 +138,7 @@ public:
 	size - size of the read object
 	count - count of the read objects
 	*/
-	void GetAt(const index_type& index, void* storage, const object_size& size, size_t count) const
+	void GetAt(const index_type& index, void* storage, const object_size& size, const size_t count) const
 	{
 		if (!Contains(index))
 			ThrowOutOfRange(index);
@@ -146,7 +146,7 @@ public:
 		_GetAt(_mapper.RealIndex(index), storage, size, count);
 	}
 
-	void GetAt(const index_type& index, void* storage, size_t count) const
+	void GetAt(const index_type& index, void* storage, const size_t count) const
 	{
 		if (!Contains(index))
 			ThrowOutOfRange(index);
@@ -167,7 +167,7 @@ public:
 		if(_fs.is_open())
 			_fs.close();
 
-		int mode = std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc;
+		auto mode = std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc;
 		_fs.open(_file_name, mode);
 		if (!_fs.is_open())
 			throw std::exception("Clear error");
@@ -184,19 +184,19 @@ public:
 	size_t GetCountElement() const
 	{
 		auto type_size = static_cast<double>(sizeof(std::remove_pointer_t<std::remove_cvref_t<Type>>));
-		auto size = static_cast<double>(_buffer_size) / type_size;
-		double remainder = modf(size, &type_size);
+		const auto size = static_cast<double>(_buffer_size) / type_size;
+		const double remainder = modf(size, &type_size);
 		_ASSERT(DoubleHelper::Compare(remainder, 0) != 0);
 		return static_cast<size_t>(type_size);
 	}
 
-	void SetObjectSize(object_size size)
+	void SetObjectSize(const object_size size)
 	{
 		_ASSERT(size != 0);
 		_buffer_size = size;
 	}
 
-	void SetTemporary(bool bTemp) noexcept
+	void SetTemporary(const bool bTemp) noexcept
 	{
 		if (!bTemp)
 			FArrayFileStorage::AddTemporaryFile(_file_name.c_str());
@@ -232,7 +232,7 @@ public:
 	void Serialize(std::ofstream& storage) const
 	{
 		_mapper.Serialize(storage);
-		auto cur_pos = _fs.tellg();
+		const auto cur_pos = _fs.tellg();
 		size_t length = Count() * _buffer_size;
 		
 		storage.write(reinterpret_cast<const char*>(&length), sizeof(length));

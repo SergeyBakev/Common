@@ -22,6 +22,9 @@
     <Filter Include="Algorithms">
       <UniqueIdentifier>{327d4a67-c6ea-4140-8286-99b456b10c75}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Process">
+      <UniqueIdentifier>{500040d4-c3ef-4c1a-9815-647dc0762b8a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -51,6 +54,9 @@
     <ClInclude Include="Algorithm\ke_algorithm.h">
       <Filter>Algorithms</Filter>
     </ClInclude>
+    <ClInclude Include="Process.h">
+      <Filter>Process</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -64,6 +70,9 @@
     </ClCompile>
     <ClCompile Include="Algorithm\ke_algorithm.cpp">
       <Filter>Algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="Process.cpp">
+      <Filter>Process</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -117,13 +117,13 @@ public:
 
 	}
 
-	FArrayObject operator=(const FArrayObject& other)
+	FArrayObject& operator=(const FArrayObject& other)
 	{
 		Base::operator=(other);
 		return *this;
 	}
 
-	FArrayObject operator=(FArrayObject&& other)
+	FArrayObject& operator=(FArrayObject&& other)
 	{
 		Base::operator=(other);
 		return *this;
@@ -135,7 +135,7 @@ public:
 		return *this;
 	}
 
-	FArrayObject operator++()
+	FArrayObject& operator++()
 	{
 		Base::operator++();
 		return *this;
@@ -150,12 +150,12 @@ public:
 	}
 private:
 
-	FArrayObject(const Base& base) : Base(base)
+	explicit FArrayObject(const Base& base) : Base(base)
 	{
 
 	}
 
-	FArrayObject(Base&& base) : Base(base)
+	explicit FArrayObject(Base&& base) : Base(base)
 	{
 
 	}

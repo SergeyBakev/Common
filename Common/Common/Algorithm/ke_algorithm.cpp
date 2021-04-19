@@ -1,6 +1,7 @@
 #include "pch.h"
 #include <cwctype>
 #include <boost/algorithm/string.hpp>
+
 #include "ke_algorithm.h"
 
 namespace Common

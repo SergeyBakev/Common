@@ -1,119 +1,93 @@
 #include <iostream>
 #include <fstream>
 #include "..\Common\Arrays\ke_farray_base.h"
+#include "..\Common\Process.h"
+#include <boost/process.hpp>
+#include <boost/asio.hpp>
 using namespace std;
+using namespace Common;
+using namespace boost;
+using namespace boost::process;
 
-static constexpr size_t SIZE = 10;
-static constexpr size_t ELEMENT_SIZE = 26; //ƒл€ тестировани€ будет использоватьс€ вектор из 26 double
-
-void test2()
+void Test1()
 {
-	std::fstream _fs;
-	_fs.open("temp.bin", ios::binary | ios::in | ios::out |ios::trunc);
-	std::vector<double> vec(ELEMENT_SIZE);
-	std::streamoff _current_putpos = 0;
-	std::streamoff _end_pos = 0;
-	size_t size = ELEMENT_SIZE * sizeof(double);
-	for (size_t i = 0; i < SIZE; i++)
-	{
-		for (size_t j = 0; j < 5; j++)
-			vec[j] = (double)i;
-		
-		_fs.write((const char*)vec.data(), size);
-		_end_pos += ELEMENT_SIZE * sizeof(double);
-		_current_putpos = _end_pos;
-	}
+    std::string exeName = "EchoConsole.exe";
+    std::string output;
+    std::string error;
+    std::string input = "hello";
 
-	auto posp = _fs.tellp();
-	auto posg = _fs.tellg();
+    asio::io_service ios;
 
-	for (size_t i = 0; i < SIZE; i++)
-	{
-		//get at
-		posp = _fs.tellp();
-		posg = _fs.tellg();
-		std::streamoff sizeoffset = static_cast<std::streamoff>(i * size);
-		std::streamoff seek = sizeoffset - _current_putpos;
-		if (seek != static_cast<std::streamoff>(0))
-			_fs.seekg(seek, std::ios::cur);
+    std::vector<char> vOut(128 << 10);
+    auto outBuffer{ asio::buffer(vOut) };
+    process::async_pipe pipeOut(ios);
 
-		if (_fs.fail() || _fs.bad() )
-			throw std::exception("Stream has invalid state");
+    std::function<void(const system::error_code& ec, std::size_t n)> onStdOut;
+    onStdOut = [&](const system::error_code& ec, size_t n)
+    {
+        output.reserve(output.size() + n);
+        output.insert(output.end(), vOut.begin(), vOut.begin() + n);
+        if (!ec)
+        {
+            asio::async_read(pipeOut, outBuffer, onStdOut);
+        }
+    };
 
-		posp = _fs.tellp();
-		posg = _fs.tellg();
+    std::vector<char> vErr(128 << 10);
+    auto errBuffer{ asio::buffer(vErr) };
+    process::async_pipe pipeErr(ios);
+    std::function<void(const system::error_code& ec, std::size_t n)> onStdErr;
+    onStdErr = [&](const system::error_code& ec, size_t n)
+    {
+        error.reserve(error.size() + n);
+        error.insert(error.end(), vErr.begin(), vErr.begin() + n);
+        if (!ec)
+        {
+            asio::async_read(pipeErr, errBuffer, onStdErr);
+        }
+    };
 
-		memset(vec.data(), 0, size);
-		_fs.read(reinterpret_cast<char*>(vec.data()), size);
-		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
+    auto inBuffer{ asio::buffer(input) };
+    process::async_pipe pipeIn(ios);
 
-		if (_fs.fail() || _fs.bad())
-			throw std::exception("Stream has invalid state");
-
-		posp = _fs.tellp();
-		posg = _fs.tellg();
-
-		//set at
-		for (size_t j = 5; j < 10; j++)
-			vec[j] = (double)j;
-		sizeoffset = static_cast<std::streamoff>(i * size);
-		seek = sizeoffset - _current_putpos;
-		if (seek != static_cast<std::streamoff>(0))
-			_fs.seekp(seek, std::ios::cur);
-
-		if (_fs.fail() || _fs.bad())
-			throw std::exception("Stream has invalid state");
-
-		posp = _fs.tellp();
-		posg = _fs.tellg();
-		
-		_fs.write(reinterpret_cast<const char*>(vec.data()), size);
-		_current_putpos = _current_putpos + seek + static_cast<std::streamoff>(size);
-
-		if (_fs.fail() || _fs.bad())
-			throw std::exception("Stream has invalid state");
-	}
+    process::child c(
+        exeName + (" "),
+        process::std_out > pipeOut,
+        process::std_err > pipeErr,
+        process::std_in < pipeIn
+    );
 
 
+    asio::async_write(pipeIn, inBuffer,
+        [&](const system::error_code& ec, std::size_t n)
+        {
+            pipeIn.async_close();
+        });
+
+    asio::async_read(pipeOut, outBuffer, onStdOut);
+    asio::async_read(pipeErr, errBuffer, onStdErr);
+
+    ios.run();
+    c.wait();
 }
 
-template <class T,class U>
-class A
-{
-public:
-	int _i;
-	template <class Type>
-	bool Equals(const Type& t) { return false; };
-
-	template<>
-	bool Equals<A>(const A& t) { return _i == t._i; }
-};
 int main()
 {
-	//test2();
- //   FArrayBase<StandartIndexMapper> ar;
- //   ar.SetObjectSize(ELEMENT_SIZE * sizeof(double));
-	//std::vector<double> vec(ELEMENT_SIZE);
-	//std::vector<double> vec1(ELEMENT_SIZE);
+    std::string exe_name = "EchoConsole.exe";
+    std::string output;
+    std::string error;
+    std::string input = "hello";
 
-	////act
-	//for (size_t i = 0; i < SIZE; i++)
-	//{
-	//	for (size_t j = 0; j < 5; j++)
-	//		vec1[j] = (double)i;
-
-	//	ar.SetAt(i, vec1.data());
-	//}
- //   
-	//for (size_t i = 0; i < SIZE; i++)
-	//{
-	//	ar.GetAt(i, vec.data());
-	//	for (size_t j = 5; j < 10; j++)
-	//		vec[j] = (double)j;
+	opstream in;
+	ipstream out;
+	child ch(exe_name, std_out > out, std_in < in);
+    
+    out >> output;
+    
 
 
-	//	ar.SetAt(i, vec.data());
-	//}
+	return 0;
+
 }
 
 
