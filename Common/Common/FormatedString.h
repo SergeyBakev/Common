@@ -37,11 +37,11 @@ namespace Common
 		template <class T>
 		struct DefaultConverter
 		{
+			constexpr DefaultConverter() {}
 			T operator()(const std::wstring& param)
 			{
 				static_assert(std::is_arithmetic<T>::value);
-				std::wstringstream ss;
-				ss << param;
+				std::wstringstream ss(param);
 				T val{};
 				ss >> val;
 			/*	if (ss.fail())

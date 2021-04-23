@@ -178,6 +178,16 @@ namespace STLBenchMarks
 		}
 	}
 
+	void Convert_String_To_Double_IOStringStream_In_Stream_Operator_In_Callable_Object(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			Common::FormattedStringV2::DefaultConverter<double> cnv;
+			double ret = cnv(str4);
+			benchmark::DoNotOptimize(ret);
+		}
+	}
+
 	void Convert_String_To_Double_STOD(benchmark::State& state)
 	{
 		while (state.KeepRunning())
@@ -216,6 +226,7 @@ namespace STLBenchMarks
 	//BENCHMARK(Convert_String_To_Double_IStringStream_In_Consructor)->Arg(ITER);
 	//BENCHMARK(Convert_String_To_Double_IOStringStream_In_Consructor)->Arg(ITER);
 	BENCHMARK(Convert_String_To_Double_IOStringStream_In_Stream_Operator)->Arg(ITER);
+	BENCHMARK(Convert_String_To_Double_IOStringStream_In_Stream_Operator_In_Callable_Object)->Arg(ITER);
 	//BENCHMARK(Pass_String_By_String_View)->Arg(ITER);
 	//BENCHMARK(Pass_String_By_Const_Ref)->Arg(ITER);
 	//BENCHMARK(Convert_String_To_Double_STOD)->Arg(ITER);
@@ -268,9 +279,9 @@ namespace FormatedStringBanchMark
 		}
 	}
 
-	BENCHMARK(ConvertWithStream)->Arg(ITER);
+	//BENCHMARK(ConvertWithStream)->Arg(ITER);
 	//BENCHMARK(ConvertWithStod)->Arg(ITER);
-	BENCHMARK(ConvertToString)->Arg(ITER);
+	//BENCHMARK(ConvertToString)->Arg(ITER);
 }
 
 int main(int argc, char** argv)
