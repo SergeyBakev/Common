@@ -37,15 +37,15 @@ namespace Common
 		template <class T>
 		struct DefaultConverter
 		{
-			T operator()(std::wstring param)
+			T operator()(const std::wstring& param)
 			{
 				static_assert(std::is_arithmetic<T>::value);
 				std::wstringstream ss;
 				ss << param;
 				T val{};
 				ss >> val;
-				if (ss.fail())
-					throw std::invalid_argument("DefaultConverter::convert fail");
+			/*	if (ss.fail())
+					throw std::invalid_argument("DefaultConverter::convert fail");*/
 
 				return val;
 			}
@@ -54,8 +54,8 @@ namespace Common
 			{
 				std::wstringstream ss;
 				ss << value;
-				if (ss.fail())
-					throw std::invalid_argument("DefaultConverter::convert fail");
+			/*	if (ss.fail())
+					throw std::invalid_argument("DefaultConverter::convert fail");*/
 				return ss.str();
 			}
 		};

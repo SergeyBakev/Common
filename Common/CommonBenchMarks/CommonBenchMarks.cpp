@@ -9,7 +9,7 @@ namespace BenchMarksFArray
 	static std::vector<double> vec;
 	static FArrayBase<SparseIndexMapper> ar;
 	static std::fstream _fs;
-	
+
 
 	static size_t iter = 0;
 	void PushBackOneDoubleElementAtVector(benchmark::State& state)
@@ -20,12 +20,12 @@ namespace BenchMarksFArray
 			double data = (double)state.iterations();
 			iter++;
 			state.ResumeTiming();
-			
+
 			benchmark::DoNotOptimize(data);
 			vec.push_back(data);
 		}
 	}
-	
+
 	void WriteOneDoubleElementAtFile(benchmark::State& state)
 	{
 		while (state.KeepRunning())
@@ -39,7 +39,7 @@ namespace BenchMarksFArray
 	}
 
 	void AddOneDoubleElementAtFArray(benchmark::State& state)
-	{	
+	{
 		while (state.KeepRunning())
 		{
 			state.PauseTiming();
@@ -62,11 +62,11 @@ namespace BenchMarksFArray
 			benchmark::DoNotOptimize(data);
 		}
 	}
-	
+
 	static double data;
 	void GetElementAtIndexFormStream(benchmark::State& state)
 	{
-		
+
 		while (state.KeepRunning())
 		{
 			_fs.read((char*)&data, sizeof(data));
@@ -90,7 +90,7 @@ namespace BenchMarksFArray
 		size_t i = 0;
 		while (state.KeepRunning())
 		{
-			ar.GetAt(state.range_x(), v.data(),10);
+			ar.GetAt(state.range_x(), v.data(), 10);
 			benchmark::DoNotOptimize(v);
 		}
 	}
@@ -101,7 +101,7 @@ namespace BenchMarksFArray
 	{
 		while (state.KeepRunning())
 		{
-			auto ret  = Common::algorithms::string::Split(L".", test);
+			auto ret = Common::algorithms::string::Split(L".", test);
 			benchmark::DoNotOptimize(ret);
 		}
 	}
@@ -131,12 +131,98 @@ namespace BenchMarksFArray
 Common::FormattedStringV2 f1;
 Common::FormattedStringV2 f2;
 Common::FormattedStringV2 f3;
-double toDouble(std::wstring v) { return std::stod(v); }
+double toDouble(const std::wstring& v) { return std::stod(v); }
+
+constexpr size_t ITER = 1000000;
+namespace STLBenchMarks
+{
+	std::wstring str1 = L"545.387";
+	std::wstring str2 = L"545.387";
+	std::wstring str3 = L"545.387";
+	std::wstring str4 = L"545.387";
+
+	void Convert_String_To_Double_IStringStream_In_Consructor(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			std::wistringstream ss(str1);
+			double ret;
+			ss >> ret;
+			benchmark::DoNotOptimize(ret);
+			benchmark::DoNotOptimize(str1);
+		}
+	}
+
+	void Convert_String_To_Double_IOStringStream_In_Consructor(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			std::wstringstream ss(str2);
+			double ret;
+			ss >> ret;
+			benchmark::DoNotOptimize(ret);
+			benchmark::DoNotOptimize(str2);
+		}
+	}
+
+	void Convert_String_To_Double_IOStringStream_In_Stream_Operator(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			std::wstringstream ss;
+			ss >> str3;
+			double ret;
+			ss >> ret;
+			benchmark::DoNotOptimize(ret);
+			benchmark::DoNotOptimize(str3);
+		}
+	}
+
+	void Convert_String_To_Double_STOD(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto ret = std::stod(str4);
+			benchmark::DoNotOptimize(ret);
+			benchmark::DoNotOptimize(str4);
+		}
+	}
+
+	void byStrv(std::wstring_view str)
+	{
+		benchmark::DoNotOptimize(str);
+	}
+
+	void bystrref(const std::wstring& str)
+	{
+		benchmark::DoNotOptimize(str);
+	}
+
+	void Pass_String_By_Const_Ref(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			byStrv(str1);
+		}
+	}
+
+	void Pass_String_By_String_View(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			byStrv(str2);
+		}
+	}
+	//BENCHMARK(Convert_String_To_Double_IStringStream_In_Consructor)->Arg(ITER);
+	//BENCHMARK(Convert_String_To_Double_IOStringStream_In_Consructor)->Arg(ITER);
+	BENCHMARK(Convert_String_To_Double_IOStringStream_In_Stream_Operator)->Arg(ITER);
+	//BENCHMARK(Pass_String_By_String_View)->Arg(ITER);
+	//BENCHMARK(Pass_String_By_Const_Ref)->Arg(ITER);
+	//BENCHMARK(Convert_String_To_Double_STOD)->Arg(ITER);
+}
 
 namespace FormatedStringBanchMark
 {
-	static constexpr size_t ITER = 100000;
-
 	void ConvertWithStream(benchmark::State& state)
 	{
 		while (state.KeepRunning())
@@ -183,10 +269,8 @@ namespace FormatedStringBanchMark
 	}
 
 	BENCHMARK(ConvertWithStream)->Arg(ITER);
-	BENCHMARK(ConvertWithStod)->Arg(ITER);
+	//BENCHMARK(ConvertWithStod)->Arg(ITER);
 	BENCHMARK(ConvertToString)->Arg(ITER);
-	BENCHMARK(TryConvertWithStod)->Arg(ITER);
-	BENCHMARK(TryConvertWithStream)->Arg(ITER);
 }
 
 int main(int argc, char** argv)
