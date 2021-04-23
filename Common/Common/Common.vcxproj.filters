@@ -57,6 +57,12 @@
     <ClInclude Include="Process.h">
       <Filter>Process</Filter>
     </ClInclude>
+    <ClInclude Include="FormatedString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Algorithm\ke_string.h">
+      <Filter>Algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -73,6 +79,9 @@
     </ClCompile>
     <ClCompile Include="Process.cpp">
       <Filter>Process</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatedString.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

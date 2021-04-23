@@ -69,5 +69,42 @@ namespace CommonTests
 				Assert::IsTrue(eq);
 			}
 		}
+
+		TEST_METHOD(Ltrim)
+		{
+			//arrange
+			std::wstring expeted = L"Expected";
+
+			//act
+			std::wstring actual = lwtrim(L"    Expected");
+
+			//assert
+			Assert::AreEqual(expeted, actual);
+		}
+
+		TEST_METHOD(Wtrim)
+		{
+			//arrange
+			std::wstring expeted = L"Expected";
+
+			//act
+			std::wstring actual = rwtrim(L"Expected		");
+
+			//assert
+			Assert::AreEqual(expeted, actual);
+		}
+
+		TEST_METHOD(Trim)
+		{
+			//arrange
+			std::wstring expeted = L"Expected";
+
+			//act
+			std::wstring actual = wtrim(L"		  Expected			  ");
+
+			//assert
+			Assert::AreEqual(expeted, actual);
+		}
+
 	};
 }

@@ -160,9 +160,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Algorithm\ke_algorithm.h" />
+    <ClInclude Include="Algorithm\ke_string.h" />
     <ClInclude Include="Arrays\ke_array_indexer.h" />
     <ClInclude Include="Arrays\ke_typed_farray.h" />
     <ClInclude Include="Arrays\ke_farray_base.h" />
+    <ClInclude Include="FormatedString.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Helpers\DoubleHelper.h" />
     <ClInclude Include="Helpers\StringHelper.h" />
@@ -173,6 +175,7 @@
   <ItemGroup>
     <ClCompile Include="Algorithm\ke_algorithm.cpp" />
     <ClCompile Include="Common.cpp" />
+    <ClCompile Include="FormatedString.cpp" />
     <ClCompile Include="Helpers\DoubleHelper.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include <cwctype>
 #include <boost/algorithm/string.hpp>
-
 #include "ke_algorithm.h"
 
 namespace Common
@@ -12,7 +11,7 @@ namespace Common
 		{
 			static std::wstring_view  emptyWord = L" ";
 			std::vector<std::wstring> Split(std::wstring_view delim, std::wstring_view str, StringSplitOptinos options)
-			{
+			{	
 				std::vector<std::wstring> ret;
 				size_t pos = 0;
 				std::wstring local = str.data();

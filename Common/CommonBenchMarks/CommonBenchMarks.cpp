@@ -1,6 +1,7 @@
 #include "benchmark/benchmark.h"
 #include "..\Common\Arrays\ke_farray_base.h"
 #include "..\Common\Algorithm\ke_algorithm.h"
+#include "..\Common\FormatedString.h"
 
 namespace BenchMarksFArray
 {
@@ -25,13 +26,6 @@ namespace BenchMarksFArray
 		}
 	}
 	
-	void SpeedIF(benchmark::State& state)
-	{
-
-		while (state.KeepRunning())
-		{
-		}
-	}
 	void WriteOneDoubleElementAtFile(benchmark::State& state)
 	{
 		while (state.KeepRunning())
@@ -121,8 +115,8 @@ namespace BenchMarksFArray
 		}
 	}
 
-	BENCHMARK(SplitStl)->Arg(ITER);
-	BENCHMARK(SplitBoost)->Arg(ITER);
+	/*BENCHMARK(SplitStl)->Arg(ITER);
+	BENCHMARK(SplitBoost)->Arg(ITER);*/
 
 	//BENCHMARK(PushBackOneDoubleElementAtVector)->Arg(ITER);
 	//BENCHMARK(WriteOneDoubleElementAtFile)->Arg(ITER);
@@ -134,21 +128,84 @@ namespace BenchMarksFArray
 
 }
 
+Common::FormattedStringV2 f1;
+Common::FormattedStringV2 f2;
+Common::FormattedStringV2 f3;
+double toDouble(std::wstring v) { return std::stod(v); }
+
+namespace FormatedStringBanchMark
+{
+	static constexpr size_t ITER = 100000;
+
+	void ConvertWithStream(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto ret = f1.GetParameter<int>(L"Tag");
+			benchmark::DoNotOptimize(ret);
+		}
+	}
+
+	void ConvertWithStod(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto ret = f1.GetParameter(L"Tag", toDouble);
+			benchmark::DoNotOptimize(ret);
+		}
+	}
+
+	void TryConvertWithStream(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto ret = f1.TryGetParameter<int>(L"Tag");
+			benchmark::DoNotOptimize(ret);
+		}
+	}
+
+	void TryConvertWithStod(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto ret = f1.TryGetParameter(L"Tag", toDouble);
+			benchmark::DoNotOptimize(ret);
+		}
+	}
+
+	void ConvertToString(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			std::wstring ret = f1.GetParameter(L"Tag");
+			benchmark::DoNotOptimize(ret);
+		}
+	}
+
+	BENCHMARK(ConvertWithStream)->Arg(ITER);
+	BENCHMARK(ConvertWithStod)->Arg(ITER);
+	BENCHMARK(ConvertToString)->Arg(ITER);
+	BENCHMARK(TryConvertWithStod)->Arg(ITER);
+	BENCHMARK(TryConvertWithStream)->Arg(ITER);
+}
+
 int main(int argc, char** argv)
 {
+	f1.Str(L"Tag2 = 45;Tag3 = 45;Tag = 45;");
+	f2.Str(L"Tag2 = 45;Tag3 = 45;Tag = 45;");
+	f3.Str(L"Tag2 = 45;Tag3 = 45;Tag = 45;");
+	//using namespace BenchMarksFArray;
+	//ar.SetObjectSize(sizeof(double));
+	//std::wstring file_name;
+	//wchar_t buffer[_MAX_PATH];
+	//_wtmpnam_s(buffer, _countof(buffer));
+	//file_name = buffer;
 
-	using namespace BenchMarksFArray;
-	ar.SetObjectSize(sizeof(double));
-	std::wstring file_name;
-	wchar_t buffer[_MAX_PATH];
-	_wtmpnam_s(buffer, _countof(buffer));
-	file_name = buffer;
-
-	int mode = std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc;
-	_fs.open(file_name, mode);
-	if (!_fs.is_open())
-		throw std::exception();
-	std::vector<double> v;
+	//int mode = std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc;
+	//_fs.open(file_name, mode);
+	//if (!_fs.is_open())
+	//	throw std::exception();
+	//std::vector<double> v;
 
 
 	::benchmark::Initialize(&argc, argv);
