@@ -2,7 +2,7 @@
 #include "WinLogReaderV2.h"
 #include <sddl.h>
 #include <stdio.h>
-#include <winevt.h>
+
 #include <sstream>
 #include "..\Helpers\win_handle_ptr.h"
 
@@ -166,25 +166,96 @@ bool WinLogReaderV2::RenderEvent(HandlePtr hEvent)
     DWORD dwBufferSize = 0;
     DWORD dwBufferUsed = 0;
     DWORD dwPropertyCount = 0;
-    std::vector<wchar_t> pRenderedContent;
+    EVT_HANDLE hContext = NULL;  
+    PEVT_VARIANT pRenderedValues = NULL;
+   
+
+    hContext = EvtCreateRenderContext(0, NULL, EvtRenderContextSystem);
+    if (NULL == hContext)
+    {
+        wprintf(L"EvtCreateRenderContext failed with %lu\n", status = GetLastError());
+    }
     bool rc = false;
     // The EvtRenderEventXml flag tells EvtRender to render the event as an XML string.
-    if (!EvtRender(NULL, hEvent.get(), EvtRenderEventXml, dwBufferSize, NULL, &dwBufferUsed, &dwPropertyCount))
+    if (!EvtRender(hContext, hEvent.get(), EvtRenderEventValues, dwBufferSize, pRenderedValues, &dwBufferUsed, &dwPropertyCount))
     {
-        if (ERROR_INSUFFICIENT_BUFFER == (status = GetLastError()))
+        pRenderedValues = (PEVT_VARIANT)malloc(dwBufferSize);
+        if (pRenderedValues)
         {
             dwBufferSize = dwBufferUsed;
-            pRenderedContent.resize(dwBufferSize);
-            EvtRender(NULL, hEvent.get(), EvtRenderEventXml, dwBufferSize, pRenderedContent.data(), &dwBufferUsed, &dwPropertyCount);
+            EvtRender(NULL, hEvent.get(), EvtRenderEventValues, dwBufferSize, pRenderedValues, &dwBufferUsed, &dwPropertyCount);
             
         }
         if (ERROR_SUCCESS == (status = GetLastError()))
             rc = true;
 
     }
-    std::wstring data(pRenderedContent.data());
-    std::wcout << data << std::endl;
+    ToRecord(pRenderedValues);
+
+    if (hContext)
+        EvtClose(hContext);
+
+    if (pRenderedValues)
+        free(pRenderedValues);
     return rc;
+}
+
+ILogRecordPtr WinLogReaderV2::ToRecord(PEVT_VARIANT& pRenderedValues)
+{
+    DWORD dwBufferSize = 0;
+    DWORD dwBufferUsed = 0;
+    DWORD dwPropertyCount = 0;
+    WCHAR wsGuid[50];
+    LPWSTR pwsSid = NULL;
+    ULONGLONG ullTimeStamp = 0;
+    ULONGLONG ullNanoseconds = 0;
+    SYSTEMTIME st;
+    FILETIME ft;
+
+
+    wprintf(L"Provider Name: %s\n", pRenderedValues[EvtSystemProviderName].StringVal);
+  
+
+
+    DWORD EventID = pRenderedValues[EvtSystemEventID].UInt16Val;
+    if (EvtVarTypeNull != pRenderedValues[EvtSystemQualifiers].Type)
+    {
+        EventID = MAKELONG(pRenderedValues[EvtSystemEventID].UInt16Val, pRenderedValues[EvtSystemQualifiers].UInt16Val);
+    }
+    wprintf(L"EventID: %lu\n", EventID);
+
+    wprintf(L"Version: %u\n", (EvtVarTypeNull == pRenderedValues[EvtSystemVersion].Type) ? 0 : pRenderedValues[EvtSystemVersion].ByteVal);
+    wprintf(L"Level: %u\n", (EvtVarTypeNull == pRenderedValues[EvtSystemLevel].Type) ? 0 : pRenderedValues[EvtSystemLevel].ByteVal);
+    wprintf(L"Task: %hu\n", (EvtVarTypeNull == pRenderedValues[EvtSystemTask].Type) ? 0 : pRenderedValues[EvtSystemTask].UInt16Val);
+    wprintf(L"Opcode: %u\n", (EvtVarTypeNull == pRenderedValues[EvtSystemOpcode].Type) ? 0 : pRenderedValues[EvtSystemOpcode].ByteVal);
+    wprintf(L"Keywords: 0x%I64x\n", pRenderedValues[EvtSystemKeywords].UInt64Val);
+
+    ullTimeStamp = pRenderedValues[EvtSystemTimeCreated].FileTimeVal;
+    ft.dwHighDateTime = (DWORD)((ullTimeStamp >> 32) & 0xFFFFFFFF);
+    ft.dwLowDateTime = (DWORD)(ullTimeStamp & 0xFFFFFFFF);
+
+    FileTimeToSystemTime(&ft, &st);
+    ullNanoseconds = (ullTimeStamp % 10000000) * 100; // Display nanoseconds instead of milliseconds for higher resolution
+    wprintf(L"TimeCreated SystemTime: %02d/%02d/%02d %02d:%02d:%02d.%I64u)\n",
+        st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute, st.wSecond, ullNanoseconds);
+
+    wprintf(L"EventRecordID: %I64u\n", pRenderedValues[EvtSystemEventRecordId].UInt64Val);
+
+    wprintf(L"Execution ProcessID: %lu\n", pRenderedValues[EvtSystemProcessID].UInt32Val);
+    wprintf(L"Execution ThreadID: %lu\n", pRenderedValues[EvtSystemThreadID].UInt32Val);
+    wprintf(L"Channel: %s\n", (EvtVarTypeNull == pRenderedValues[EvtSystemChannel].Type) ? L"" : pRenderedValues[EvtSystemChannel].StringVal);
+    wprintf(L"Computer: %s\n", pRenderedValues[EvtSystemComputer].StringVal);
+
+    if (EvtVarTypeNull != pRenderedValues[EvtSystemUserID].Type)
+    {
+        if (ConvertSidToStringSid(pRenderedValues[EvtSystemUserID].SidVal, &pwsSid))
+        {
+            wprintf(L"Security UserID: %s\n", pwsSid);
+            LocalFree(pwsSid);
+        }
+    }
+
+    return nullptr;
 }
 
 ILogReaderPtr WinLogReaderV2::Select(const ILogFilter& filter)

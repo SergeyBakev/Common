@@ -2,10 +2,10 @@
 #include "ILogReader.h"
 #include "WinEventRecord.h"
 #include <Windows.h>
+#include <winevt.h>
 #include "..\..\Helpers\win_handle_ptr.h"
 
 using ByteBuffer = std::vector<unsigned char>;
-
 class WinLogReaderV2 : public ILogReader, public std::enable_shared_from_this<WinLogReaderV2>
 {
 public:
@@ -28,7 +28,9 @@ public:
 
 private:
 	bool RenderEvents(HandlePtr hResults);
-	bool RenderEvent(HandlePtr hResults);
+	bool RenderEvent(HandlePtr hEvent);
+
+	ILogRecordPtr ToRecord(PEVT_VARIANT& hEvent);
 private:
 	LogRecordsArray records_;
 	std::wstring provider_;
