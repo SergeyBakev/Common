@@ -129,7 +129,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>..\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Include;Logger\EventLogger;.\Helpers;Algorithm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -167,8 +167,21 @@
     <ClInclude Include="FormatedString.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Helpers\DoubleHelper.h" />
+    <ClInclude Include="Helpers\ke_kernel.h" />
     <ClInclude Include="Helpers\StringHelper.h" />
     <ClInclude Include="ke_type_traits.h" />
+    <ClInclude Include="Logger\EventLogger\IJournalLogger.h" />
+    <ClInclude Include="Logger\EventLogger\ILogFilter.h" />
+    <ClInclude Include="Logger\EventLogger\ILogReader.h" />
+    <ClInclude Include="Logger\EventLogger\ILogRecord.h" />
+    <ClInclude Include="Logger\EventLogger\JournalLogger.h" />
+    <ClInclude Include="Logger\EventLogger\LogFactory.h" />
+    <ClInclude Include="Logger\EventLogger\loggerBase.h" />
+    <ClInclude Include="Logger\EventLogger\log_record_type.h" />
+    <ClInclude Include="Logger\EventLogger\WinEventRecord.h" />
+    <ClInclude Include="Logger\EventLogger\WinLogFilter.h" />
+    <ClInclude Include="Logger\EventLogger\WinLogReader.h" />
+    <ClInclude Include="Logger\EventLogger\WinLogReaderV2.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Process.h" />
   </ItemGroup>
@@ -177,6 +190,14 @@
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="FormatedString.cpp" />
     <ClCompile Include="Helpers\DoubleHelper.cpp" />
+    <ClCompile Include="Helpers\ke_kernel.cpp" />
+    <ClCompile Include="Logger\EventLogger\JournalLogger.cpp" />
+    <ClCompile Include="Logger\EventLogger\LogFactory.cpp" />
+    <ClCompile Include="Logger\EventLogger\loggerBase.cpp" />
+    <ClCompile Include="Logger\EventLogger\WinEventRecord.cpp" />
+    <ClCompile Include="Logger\EventLogger\WinLogFilter.cpp" />
+    <ClCompile Include="Logger\EventLogger\WinLogReader.cpp" />
+    <ClCompile Include="Logger\EventLogger\WinLogReaderV2.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

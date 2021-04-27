@@ -17,6 +17,9 @@
 #include "..\Common\FormatedString.h"
 #include "..\Common\Helpers\StringHelper.h"
 #include "..\Common\Arrays\ke_array_indexer.h"
+#include "..\Common\Logger\EventLogger\JournalLogger.h"
+#include "..\Common\Logger\EventLogger\WinLogReaderV2.h"
+#include "..\Common\Logger\EventLogger\WinLogFilter.h"
 
 using DoubleVector = std::vector<double>;
 #endif //PCH_H

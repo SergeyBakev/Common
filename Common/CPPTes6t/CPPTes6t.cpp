@@ -3,6 +3,20 @@
 #include <Windows.h>
 #include <comutil.h>
 #pragma comment(lib,"comsuppwd.lib")
+
+#include "..\Common\Arrays\ke_farray_base.h"
+#include "..\Common\Arrays\ke_typed_farray.h"
+#include "..\Common\ke_type_traits.h"
+#include "..\Common\Algorithm\ke_algorithm.h"
+#include "..\Common\Algorithm\ke_string.h"
+#include "..\Common\FormatedString.h"
+#include "..\Common\Helpers\StringHelper.h"
+#include "..\Common\Arrays\ke_array_indexer.h"
+#include "..\Common\Logger\EventLogger\JournalLogger.h"
+#include "..\Common\Logger\EventLogger\WinLogReaderV2.h"
+#include "..\Common\Logger\EventLogger\WinLogFilter.h"
+
+
 //#include "..\Common\Arrays\ke_farray_base.h"
 //#include "..\Common\Process.h"
 //#include <boost/process.hpp>
@@ -75,18 +89,18 @@ using namespace std;
 //    c.wait();
 //}
 
+static inline std::wstring providerName = L"AxStream License Service v3.0";
+
+
 int main()
 {
-	union S
-	{
-		int a;
-		double b;
-	};
-
-	S s;
-	s.b = 3.456;
-
-	double& val = *((double*)(&s));
+	//arange
+	std::shared_ptr<WinLogReaderV2> reader(new WinLogReaderV2(providerName, GetModuleHandle(nullptr)));
+	//act
+	WinLogFilter filter;
+	filter.name = providerName;
+	reader->Select(filter);
+	auto records = reader->GetRecords();
 	return 0;
 
 }

@@ -25,6 +25,21 @@
     <Filter Include="Process">
       <UniqueIdentifier>{500040d4-c3ef-4c1a-9815-647dc0762b8a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Logger">
+      <UniqueIdentifier>{85cd23e4-237e-4daa-b5dc-ffaf5500878c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger\EventLogger">
+      <UniqueIdentifier>{67b08228-1544-475e-8dee-47e99fb3fd8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger\EventLogger\Interface">
+      <UniqueIdentifier>{06f75567-ed6f-483e-8be2-101836de76fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger\EventLogger\Generic">
+      <UniqueIdentifier>{df594d69-3014-44e8-b2de-ede93a130c9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Logger\EventLogger\WinLoggerImpl">
+      <UniqueIdentifier>{84852bca-41dd-433d-9e6a-761d07b8cc51}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -63,6 +78,45 @@
     <ClInclude Include="Algorithm\ke_string.h">
       <Filter>Algorithms</Filter>
     </ClInclude>
+    <ClInclude Include="Logger\EventLogger\JournalLogger.h">
+      <Filter>Logger\EventLogger</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\IJournalLogger.h">
+      <Filter>Logger\EventLogger\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\ILogFilter.h">
+      <Filter>Logger\EventLogger\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\ILogReader.h">
+      <Filter>Logger\EventLogger\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\ILogRecord.h">
+      <Filter>Logger\EventLogger\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\WinEventRecord.h">
+      <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\WinLogFilter.h">
+      <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\WinLogReader.h">
+      <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\log_record_type.h">
+      <Filter>Logger\EventLogger\Generic</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\LogFactory.h">
+      <Filter>Logger\EventLogger\Generic</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\loggerBase.h">
+      <Filter>Logger\EventLogger\Generic</Filter>
+    </ClInclude>
+    <ClInclude Include="Helpers\ke_kernel.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger\EventLogger\WinLogReaderV2.h">
+      <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -82,6 +136,30 @@
     </ClCompile>
     <ClCompile Include="FormatedString.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\EventLogger\JournalLogger.cpp">
+      <Filter>Logger\EventLogger</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\EventLogger\WinEventRecord.cpp">
+      <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\EventLogger\WinLogFilter.cpp">
+      <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\EventLogger\WinLogReader.cpp">
+      <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\EventLogger\LogFactory.cpp">
+      <Filter>Logger\EventLogger\Generic</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\EventLogger\loggerBase.cpp">
+      <Filter>Logger\EventLogger\Generic</Filter>
+    </ClCompile>
+    <ClCompile Include="Helpers\ke_kernel.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\EventLogger\WinLogReaderV2.cpp">
+      <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

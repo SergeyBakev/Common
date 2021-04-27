@@ -178,11 +178,12 @@ namespace STLBenchMarks
 		}
 	}
 
+	Common::FormattedStringV2::DefaultConverter<double> cnv;
 	void Convert_String_To_Double_IOStringStream_In_Stream_Operator_In_Callable_Object(benchmark::State& state)
 	{
 		while (state.KeepRunning())
 		{
-			Common::FormattedStringV2::DefaultConverter<double> cnv;
+			
 			double ret = cnv(str4);
 			benchmark::DoNotOptimize(ret);
 		}

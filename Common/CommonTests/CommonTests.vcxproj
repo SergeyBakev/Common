@@ -160,6 +160,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EventLoggerTests.cpp" />
     <ClCompile Include="FArrayBase_Sparse_Indexer.cpp" />
     <ClCompile Include="FArray_Base_Standart_Indexer.cpp" />
     <ClCompile Include="FormatedStringTests.cpp" />

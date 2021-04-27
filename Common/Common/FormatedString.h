@@ -41,7 +41,8 @@ namespace Common
 			T operator()(const std::wstring& param)
 			{
 				static_assert(std::is_arithmetic<T>::value);
-				std::wstringstream ss(param);
+				std::wstringstream ss;
+				ss << param;
 				T val{};
 				ss >> val;
 			/*	if (ss.fail())
