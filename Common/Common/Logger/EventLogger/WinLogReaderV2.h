@@ -24,13 +24,17 @@ public:
 	virtual void ToStream(std::wostream& ar) override;
 
 	virtual bool IsFiltred() const override;
-
+private:
+	struct EventDeleter
+	{
+		void operator()(void* hEvent) const;
+	};
 
 private:
-	bool RenderEvents(HandlePtr hResults);
-	bool RenderEvent(HandlePtr hEvent);
+	bool RenderEvents(const HandlePtr& hResults);
+	ILogRecordPtr RenderEvent(const HandlePtr& hEvent);
 
-	ILogRecordPtr ToRecord(PEVT_VARIANT& hEvent);
+	ILogRecordPtr ToRecord(const PEVT_VARIANT pRenderedValues, const HandlePtr& hEvent);
 private:
 	LogRecordsArray records_;
 	std::wstring provider_;

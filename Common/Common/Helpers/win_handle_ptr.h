@@ -10,10 +10,6 @@ auto MakeHandlePtr(Handle handle, Deleter del);
 template<class Handle, class Deleter>
 inline auto MakeHandlePtr(Handle handle, Deleter del)
 {
-    HandlePtr handle_(handle, [=](Handle p)
-        {
-            del(p);
-            p = INVALID_HANDLE_VALUE;
-        });
+    HandlePtr handle_(handle, del);
     return handle_;
 }

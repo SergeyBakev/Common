@@ -15,14 +15,9 @@
 #include "..\Common\Logger\EventLogger\JournalLogger.h"
 #include "..\Common\Logger\EventLogger\WinLogReaderV2.h"
 #include "..\Common\Logger\EventLogger\WinLogFilter.h"
-
-
-//#include "..\Common\Arrays\ke_farray_base.h"
-//#include "..\Common\Process.h"
-//#include <boost/process.hpp>
-//#include <boost/asio.hpp>
 using namespace std;
 #include <variant>
+#include <sstream>
 //using namespace Common;
 //using namespace boost;
 //using namespace boost::process;
@@ -89,18 +84,45 @@ using namespace std;
 //    c.wait();
 //}
 
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC //to get more details
+#include <crtdbg.h>   //for malloc and free
+#endif
+
 static inline std::wstring providerName = L"AxStream License Service v3.0";
 
 
 int main()
 {
+#ifdef _DEBUG
+	_CrtMemState sOld;
+	_CrtMemState sNew;
+	_CrtMemState sDiff;
+	_CrtMemCheckpoint(&sOld); //take a snapchot
+#endif
 	//arange
-	std::shared_ptr<WinLogReaderV2> reader(new WinLogReaderV2(providerName, GetModuleHandle(nullptr)));
-	//act
-	WinLogFilter filter;
-	filter.name = providerName;
-	reader->Select(filter);
-	auto records = reader->GetRecords();
+	{
+		std::shared_ptr<WinLogReaderV2> reader(new WinLogReaderV2(providerName, GetModuleHandle(nullptr)));
+		//act
+		WinLogFilter filter;
+		filter.name = providerName;
+		std::wstringstream ss;
+		reader->Select(filter)->ToStream(ss);
+		std::wcout << ss.str();
+	}
+
+#ifdef _DEBUG
+	_CrtMemCheckpoint(&sNew); //take a snapchot 
+	if (_CrtMemDifference(&sDiff, &sOld, &sNew)) // if there is a difference
+	{
+		OutputDebugString(L"-----------_CrtMemDumpStatistics ---------");
+		_CrtMemDumpStatistics(&sDiff);
+		OutputDebugString(L"-----------_CrtMemDumpAllObjectsSince ---------");
+		_CrtMemDumpAllObjectsSince(&sOld);
+		OutputDebugString(L"-----------_CrtDumpMemoryLeaks ---------");
+		_CrtDumpMemoryLeaks();
+	}
+#endif
 	return 0;
 
 }

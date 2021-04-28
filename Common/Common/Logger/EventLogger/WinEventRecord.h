@@ -1,3 +1,4 @@
+#pragma once
 #include "ILogRecord.h"
 
 class WinEventRecord : public ILogRecord
