@@ -10,6 +10,8 @@
 #include <set>
 #include <algorithm>
 #include "..\Common\Arrays\ke_farray_base.h"
+#include "..\Common\ke_def.h"
+#include "..\Common\Helpers\ke_kernel.h"
 #include "..\Common\Arrays\ke_typed_farray.h"
 #include "..\Common\ke_type_traits.h"
 #include "..\Common\Algorithm\ke_algorithm.h"
@@ -20,6 +22,7 @@
 #include "..\Common\Logger\EventLogger\JournalLogger.h"
 #include "..\Common\Logger\EventLogger\WinLogReaderV2.h"
 #include "..\Common\Logger\EventLogger\WinLogFilter.h"
+#include "..\Common\Logger\EventLogger\DummyReader.h"
 
 using DoubleVector = std::vector<double>;
 #endif //PCH_H

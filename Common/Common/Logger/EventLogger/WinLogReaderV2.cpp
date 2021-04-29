@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "WinLogReaderV2.h"
+#include "..\FormatedString.h"
 #include <sddl.h>
 #include <stdio.h>
 #include <algorithm>
@@ -7,11 +8,12 @@
 #include "..\Helpers\win_handle_ptr.h"
 #include "ke_kernel.h"
 #include "WinEventRecord.h"
+#include "WinLogFilter.h"
 #pragma comment(lib, "wevtapi.lib")	
 
 //------------------------------------------------------------------------------------
-WinLogReaderV2::WinLogReaderV2(std::wstring_view providerName, HMODULE msgModule)
-	: provider_(providerName), resDll_(msgModule)
+WinLogReaderV2::WinLogReaderV2(std::wstring_view providerName)
+	: provider_(providerName)
 {
 }
 //------------------------------------------------------------------------------------
@@ -19,8 +21,11 @@ const LogRecordsArray& WinLogReaderV2::GetRecords() const
 {
 	if (!IsFiltred())
 	{
-
+        WinLogFilter f;
+        f.name = provider_;
+        const_cast<WinLogReaderV2*>(this)->Select(f);
 	}
+
 	return records_;
 }
 //------------------------------------------------------------------------------------
@@ -39,7 +44,7 @@ LogRecordType WinLogReaderV2::GetLogRecordType() const
 	return LogRecordType::WinLogRecord;
 }
 //------------------------------------------------------------------------------------
-bool WinLogReaderV2::RenderEvents(const HandlePtr& hResults)
+bool WinLogReaderV2::RenderEvents(const HandlePtr& hResults, const ILogFilter& filter)
 {
     std::vector<EVT_HANDLE> hEvents(10);
     DWORD dwReturned = 0;
@@ -50,11 +55,12 @@ bool WinLogReaderV2::RenderEvents(const HandlePtr& hResults)
         {
             auto eHandle = MakeHandlePtr(hEvents[i], EventDeleter{});
             auto record = RenderEvent(eHandle);
-            if (record)
+            if (record && filter.IsAvailable(record))
                 records_.push_back(std::move(record));
             
         }
     }
+    isFiltred_ = true;
     return HasRecord() && GetLastError() == 0;
 }
 //------------------------------------------------------------------------------------
@@ -138,7 +144,23 @@ ILogRecordPtr WinLogReaderV2::ToRecord(const PEVT_VARIANT pRenderedValues, const
         massage = GetMessageString(hMethadata.get(), hEvent.get(), EvtFormatMessageEvent);
     }
 
-    type = pRenderedValues[EvtSystemLevel].Type == EvtVarTypeNull ? 0 : pRenderedValues[EvtSystemLevel].ByteVal;
+    UINT8 type_ = pRenderedValues[EvtSystemLevel].Type == EvtVarTypeNull ? 0 : pRenderedValues[EvtSystemLevel].ByteVal;
+    switch (type_)
+    {
+    case 2:
+        type = EVENTLOG_ERROR_TYPE;
+        break;
+    case 3:
+        type = EVENTLOG_WARNING_TYPE;
+        break;
+    case 4:
+        type = EVENTLOG_INFORMATION_TYPE;
+        break;
+    default:
+        _ASSERT_EXPR(0, L"Unknow type");
+        type = EVENTLOG_INFORMATION_TYPE;
+        break;
+    }
     eventID = pRenderedValues[EvtSystemEventID].Type == EvtVarTypeNull ? 0 : pRenderedValues[EvtSystemEventID].ByteVal;
     category = pRenderedValues[EvtSystemTask].Type == EvtVarTypeNull ? 0 : pRenderedValues[EvtSystemTask].ByteVal;
     {
@@ -165,9 +187,15 @@ ILogReaderPtr WinLogReaderV2::Select(const ILogFilter& filter)
 {
     DWORD status = ERROR_SUCCESS;
     std::wstringstream ssquery;
+    auto now = Kernel::DateTimeConverter::Now_t();
     ssquery << L"<QueryList>" 
             << L"<Query Path='Application'>"
-            << L"<Select Path='Application'>"<<L"*[System[Provider[@Name = '"<< filter.GetName() <<"']]]" <<"</Select>"
+            << L"<Select Path='Application'>"
+            << L"*[System"
+            << L"[Provider[@Name = '"<< filter.GetName() <<"']";
+    ssquery << L"]" // close  porvider
+            << L"]" // close system
+            << L"</Select>"
             << L"</Query>"
             << L"</QueryList>";
 
@@ -178,7 +206,7 @@ ILogReaderPtr WinLogReaderV2::Select(const ILogFilter& filter)
         return this_;
  
     
-    RenderEvents(hResults);
+    RenderEvents(hResults,filter);
     
 	return shared_from_this();
 }
@@ -193,7 +221,7 @@ void WinLogReaderV2::ToStream(std::wostream& ar)
 //------------------------------------------------------------------------------------
 bool WinLogReaderV2::IsFiltred() const
 {
-	return false;
+	return isFiltred_;
 }
 //------------------------------------------------------------------------------------
 void WinLogReaderV2::EventDeleter::operator()(void* hEvent) const

@@ -8,6 +8,7 @@ class LogJournalProvider final
 public:
 	LogJournalProvider() = default;
 	void Initialize(std::wstring_view providerName);
+
 	void Deinitialize();
 
 	template <class ...Args>
@@ -40,7 +41,7 @@ private:
 //		Method uses for register journal provider in windows registry
 //		This method work only if users have administrative previlegies 
 
-bool RegisterWinJournalProvider(std::wstring_view entrie_, std::wstring_view dllPath, size_t categoryCount, size_t countSupportedTypes, bool bUpdateCount);
+bool RegisterWinJournalProvider(std::wstring entrie_, std::wstring dllPath, size_t categoryCount, size_t countSupportedTypes, bool bUpdateCount);
 
 
 

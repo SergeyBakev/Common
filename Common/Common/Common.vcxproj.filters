@@ -117,6 +117,12 @@
     <ClInclude Include="Logger\EventLogger\WinLogReaderV2.h">
       <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
     </ClInclude>
+    <ClInclude Include="Logger\EventLogger\DummyReader.h">
+      <Filter>Logger\EventLogger\Generic</Filter>
+    </ClInclude>
+    <ClInclude Include="ke_def.h">
+      <Filter>Helpers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -160,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="Logger\EventLogger\WinLogReaderV2.cpp">
       <Filter>Logger\EventLogger\WinLoggerImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger\EventLogger\DummyReader.cpp">
+      <Filter>Logger\EventLogger\Generic</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

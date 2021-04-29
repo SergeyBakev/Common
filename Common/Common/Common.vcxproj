@@ -169,7 +169,9 @@
     <ClInclude Include="Helpers\DoubleHelper.h" />
     <ClInclude Include="Helpers\ke_kernel.h" />
     <ClInclude Include="Helpers\StringHelper.h" />
+    <ClInclude Include="ke_def.h" />
     <ClInclude Include="ke_type_traits.h" />
+    <ClInclude Include="Logger\EventLogger\DummyReader.h" />
     <ClInclude Include="Logger\EventLogger\IJournalLogger.h" />
     <ClInclude Include="Logger\EventLogger\ILogFilter.h" />
     <ClInclude Include="Logger\EventLogger\ILogReader.h" />
@@ -191,6 +193,7 @@
     <ClCompile Include="FormatedString.cpp" />
     <ClCompile Include="Helpers\DoubleHelper.cpp" />
     <ClCompile Include="Helpers\ke_kernel.cpp" />
+    <ClCompile Include="Logger\EventLogger\DummyReader.cpp" />
     <ClCompile Include="Logger\EventLogger\JournalLogger.cpp" />
     <ClCompile Include="Logger\EventLogger\LogFactory.cpp" />
     <ClCompile Include="Logger\EventLogger\loggerBase.cpp" />

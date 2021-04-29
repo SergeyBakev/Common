@@ -45,8 +45,8 @@ namespace Common
 				ss << param;
 				T val{};
 				ss >> val;
-			/*	if (ss.fail())
-					throw std::invalid_argument("DefaultConverter::convert fail");*/
+				if (ss.fail())
+					throw std::invalid_argument("DefaultConverter::convert fail");
 
 				return val;
 			}
@@ -55,8 +55,8 @@ namespace Common
 			{
 				std::wstringstream ss;
 				ss << value;
-			/*	if (ss.fail())
-					throw std::invalid_argument("DefaultConverter::convert fail");*/
+				if (ss.fail())
+					throw std::invalid_argument("DefaultConverter::convert fail");
 				return ss.str();
 			}
 		};

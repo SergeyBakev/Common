@@ -9,7 +9,7 @@ using ByteBuffer = std::vector<unsigned char>;
 class WinLogReaderV2 : public ILogReader, public std::enable_shared_from_this<WinLogReaderV2>
 {
 public:
-	WinLogReaderV2(std::wstring_view providerName, HMODULE msgModule);
+	WinLogReaderV2(std::wstring_view providerName);
 
 	virtual const LogRecordsArray& GetRecords() const override;
 
@@ -31,12 +31,13 @@ private:
 	};
 
 private:
-	bool RenderEvents(const HandlePtr& hResults);
+	bool RenderEvents(const HandlePtr& hResults, const ILogFilter& filter);
 	ILogRecordPtr RenderEvent(const HandlePtr& hEvent);
 
 	ILogRecordPtr ToRecord(const PEVT_VARIANT pRenderedValues, const HandlePtr& hEvent);
 private:
 	LogRecordsArray records_;
+	bool isFiltred_ = false;
 	std::wstring provider_;
 	HMODULE resDll_;
 };

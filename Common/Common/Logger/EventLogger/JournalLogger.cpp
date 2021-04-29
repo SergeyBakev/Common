@@ -3,7 +3,8 @@
 #include <filesystem>
 #include "JournalLogger.h"
 #include "..\..\Helpers\win_handle_ptr.h"
-#include "WinLogReader.h"
+#include "WinLogReaderV2.h"
+#include "DummyReader.h"
 //------------------------------------------------------------------------------------
 //---------------------------JournalLoggerImpl---------------------------------------------------------
 class WinJournalLoggerImpl : public IJournalLogger
@@ -53,11 +54,11 @@ public:
         Kernel::CRegistry reg(hKey, REGISTRY_FOLDER);
         std::wstring massageResource = reg.GetProfileString(provider_, L"EventMessageFile",L"*");
         _ASSERT_EXPR(massageResource != L"*", L"WinJournalLoggerImpl:: fail! massages resources not foud");*/
-        TCHAR exePath[_MAX_PATH] = { 0 };
+      /*  TCHAR exePath[_MAX_PATH] = { 0 };
         ::GetModuleFileName(NULL, exePath, _MAX_PATH);
         std::wstring_view  szFilePath = exePath;
-        HMODULE module = LoadLibraryEx(szFilePath.data(), NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
-        return std::make_shared<WinLogReader>(provider_, module);
+        HMODULE module = LoadLibraryEx(szFilePath.data(), NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);*/
+        return std::make_shared<WinLogReaderV2>(provider_);
     }
     
 private:
@@ -100,20 +101,10 @@ public:
     }
 };
 //------------------------------------------------------------------------------------
-class DummyJournalLogger : public IJournalLogger
+ILogReaderPtr DummyJournalLogger::MakeReader() const
 {
-public:
-    // Inherited via IJournalLogger
-    virtual void Write(unsigned short type, unsigned short category, unsigned long eventId, StringVector& params) const override
-    {
-
-    }
-
-    virtual ILogReaderPtr MakeReader() const override
-    {
-        return std::make_shared<DummyLogReader>();
-    }
-};
+    return std::make_shared<DummyLogReader>();
+}
 //------------------------------------------------------------------------------------
 void LogJournalProvider::Initialize(std::wstring_view providerName)
 {
@@ -152,23 +143,59 @@ IJournalLoggerPtr LogJournalProvider::Instance() const
     return instance_;
 }
 //------------------------------------------------------------------------------------
-bool RegisterWinJournalProvider(std::wstring_view entrie_, std::wstring_view dllPath, size_t categoryCount, size_t countSupportedTypes, bool bUpdateCount)
+bool RegisterWinJournalProvider(std::wstring entrie_, std::wstring dllPath, size_t categoryCount, size_t countSupportedTypes, bool bUpdateCount)
 {
     if (!std::filesystem::exists(dllPath))
     {
         _ASSERT_EXPR(0, L"resource path dosent exist");
         return false;
     }
-   /* static const std::wstring_view REGISTRY_FOLDER = L"SYSTEM\\CurrentControlSet\\services\\eventlog\\Application";
-    static const HKEY hKey = HKEY_LOCAL_MACHINE;
-    Kernel::CRegistry reg(hKey, REGISTRY_FOLDER);
+    const HKEY hUseKey = HKEY_LOCAL_MACHINE;
+    HKEY hKey = NULL;
+
+    if (::RegCreateKey(hUseKey, entrie_.data(), &hKey) != ERROR_SUCCESS)
+        return false;
+    
    
-    reg.WriteProfileString(entrie_, L"CategoryMessageFile", dllPath.data());
-    reg.WriteProfileString(entrie_, L"EventMessageFile", dllPath.data());
-    reg.WriteProfileString(entrie_, L"ParameterMessageFile", dllPath.data());
-    reg.WriteProfileInt(entrie_, L"CategoryCount", categoryCount);
-    reg.WriteProfileInt(entrie_, L"TypesSupported", countSupportedTypes);
-    reg.WriteProfileInt(entrie_, L"TypesSupported", countSupportedTypes);*/
+    // Add the Event ID message-file name to the 'EventMessageFile' subkey.
+    ::RegSetValueEx(hKey,
+        L"EventMessageFile",
+        0,
+        REG_EXPAND_SZ,
+        (CONST BYTE*)dllPath.data(),
+        dllPath.size() * sizeof(wchar_t));
+
+    ::RegSetValueEx(hKey,
+        L"CategoryMessageFile",
+        0,
+        REG_EXPAND_SZ,
+        (CONST BYTE*)dllPath.data(),
+        dllPath.size() * sizeof(wchar_t));
+
+    ::RegSetValueEx(hKey,
+        L"ParameterMessageFile",
+        0,
+        REG_EXPAND_SZ,
+        (CONST BYTE*)dllPath.data(),
+        dllPath.size() * sizeof(wchar_t));
+
+    // Set the supported types flags.
+    DWORD dwData = countSupportedTypes;
+    ::RegSetValueEx(hKey,
+        L"TypesSupported",
+        0,
+        REG_DWORD,
+        (CONST BYTE*)&dwData,
+        sizeof(DWORD));
+
+    dwData = categoryCount;
+    ::RegSetValueEx(hKey,
+        L"CategoryCount",
+        0,
+        REG_DWORD,
+        (CONST BYTE*) & dwData,
+        sizeof(DWORD));
+    ::RegCloseKey(hKey);
     
     return true;
 }

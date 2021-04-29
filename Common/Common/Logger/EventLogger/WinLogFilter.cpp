@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "ke_kernel.h"
 #include "WinLogFilter.h"
-
+#include "..\FormatedString.h"
 
 bool WinLogFilter::IsAvailable(ILogRecordPtr record) const
 {
@@ -27,3 +27,15 @@ std::wstring WinLogFilter::GetName() const
 {
     return name;
 }
+
+std::wstring WinLogFilter::Str() const
+{
+    Common::FormattedStringV2 fmt;
+    fmt.SetParameter(L"name", name);
+    fmt.SetParameter<unsigned short>(L"eventCategory", eventCategory);
+    fmt.SetParameter<unsigned short>(L"eventType", eventType);
+    fmt.SetParameter<std::time_t>(L"startTime", startTime);
+    fmt.SetParameter<std::time_t>(L"endTime", endTime);
+    return fmt.Str();
+}
+

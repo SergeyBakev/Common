@@ -7,6 +7,7 @@ class WinLogFilter : public ILogFilter
 public:
 	virtual bool IsAvailable(ILogRecordPtr record) const override;
     virtual std::wstring GetName() const override;
+    virtual std::wstring Str() const override;
 public:
     std::wstring name;
     unsigned short eventCategory = (std::numeric_limits<unsigned short>::max)();

@@ -102,7 +102,7 @@ int main()
 #endif
 	//arange
 	{
-		std::shared_ptr<WinLogReaderV2> reader(new WinLogReaderV2(providerName, GetModuleHandle(nullptr)));
+		auto reader = std::make_shared<WinLogReaderV2>(providerName);
 		//act
 		WinLogFilter filter;
 		filter.name = providerName;
