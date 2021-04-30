@@ -15,6 +15,14 @@
 WinLogReaderV2::WinLogReaderV2(std::wstring_view providerName)
 	: provider_(providerName)
 {
+    
+}
+//------------------------------------------------------------------------------------
+WinLogReaderV2::~WinLogReaderV2()
+{
+#ifdef USE_ASYNC
+    future_.wait();
+#endif
 }
 //------------------------------------------------------------------------------------
 const LogRecordsArray& WinLogReaderV2::GetRecords() const
@@ -24,8 +32,11 @@ const LogRecordsArray& WinLogReaderV2::GetRecords() const
         WinLogFilter f;
         f.name = provider_;
         const_cast<WinLogReaderV2*>(this)->Select(f);
+        
 	}
-
+#ifdef USE_ASYNC
+    future_.wait();
+#endif
 	return records_;
 }
 //------------------------------------------------------------------------------------
@@ -46,7 +57,8 @@ LogRecordType WinLogReaderV2::GetLogRecordType() const
 //------------------------------------------------------------------------------------
 bool WinLogReaderV2::RenderEvents(const HandlePtr& hResults, const ILogFilter& filter)
 {
-    std::vector<EVT_HANDLE> hEvents(10);
+    const size_t eventCount = 10;
+    std::vector<EVT_HANDLE> hEvents(eventCount);
     DWORD dwReturned = 0;
     records_.clear();
     while (EvtNext(hResults.get(), 10, hEvents.data(), INFINITE, 0, &dwReturned))
@@ -57,9 +69,10 @@ bool WinLogReaderV2::RenderEvents(const HandlePtr& hResults, const ILogFilter& f
             auto record = RenderEvent(eHandle);
             if (record && filter.IsAvailable(record))
                 records_.push_back(std::move(record));
-            
+
         }
     }
+    auto err = GetLastError();
     isFiltred_ = true;
     return HasRecord() && GetLastError() == 0;
 }
@@ -201,18 +214,40 @@ ILogReaderPtr WinLogReaderV2::Select(const ILogFilter& filter)
 
     auto this_ = shared_from_this();
     std::wstring query  = ssquery.str();
+#ifdef USE_ASYNC
+    auto task = [&filter, query, ptr = weak_from_this()]() -> void
+    {
+        if (!ptr.expired())
+        {
+            auto shared = ptr.lock();
+            auto hResults = MakeHandlePtr(EvtQuery(NULL, NULL, query.c_str(), EvtQueryChannelPath | EvtQueryReverseDirection), EventDeleter{});
+            if (hResults == nullptr)
+                return;
+
+
+            shared->RenderEvents(hResults, filter);
+        }
+    };
+
+    future_ = std::async(std::launch::async, task);
+#else
+
     auto hResults = MakeHandlePtr(EvtQuery(NULL, NULL, query.c_str(), EvtQueryChannelPath | EvtQueryReverseDirection), EventDeleter{});
     if (hResults == nullptr)
         return this_;
- 
+    RenderEvents(hResults, filter);
+#endif // USE_ASYNC
+
     
-    RenderEvents(hResults,filter);
     
 	return shared_from_this();
 }
 //------------------------------------------------------------------------------------
 void WinLogReaderV2::ToStream(std::wostream& ar)
 {
+#ifdef USE_ASYNC
+    future_.wait();
+#endif
     std::for_each(std::begin(records_), std::end(records_), [&ar](const ILogRecordPtr record)
         {
             record->Serialize(ar);

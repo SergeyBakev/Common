@@ -9,12 +9,14 @@
 #include "..\Common\ke_type_traits.h"
 #include "..\Common\Algorithm\ke_algorithm.h"
 #include "..\Common\Algorithm\ke_string.h"
+#include "..\Common\Helpers\ke_kernel.h"
 #include "..\Common\FormatedString.h"
 #include "..\Common\Helpers\StringHelper.h"
 #include "..\Common\Arrays\ke_array_indexer.h"
 #include "..\Common\Logger\EventLogger\JournalLogger.h"
 #include "..\Common\Logger\EventLogger\WinLogReaderV2.h"
 #include "..\Common\Logger\EventLogger\WinLogFilter.h"
+#include "WinJournalLoggerImplV2.h"
 using namespace std;
 #include <variant>
 #include <sstream>
@@ -89,8 +91,7 @@ using namespace std;
 #include <crtdbg.h>   //for malloc and free
 #endif
 
-static inline std::wstring providerName = L"AxStream License Service v3.0";
-
+static inline std::wstring providerName = L"CommonTests EventLoggerTests";
 
 int main()
 {
@@ -102,13 +103,7 @@ int main()
 #endif
 	//arange
 	{
-		auto reader = std::make_shared<WinLogReaderV2>(providerName);
-		//act
-		WinLogFilter filter;
-		filter.name = providerName;
-		std::wstringstream ss;
-		reader->Select(filter)->ToStream(ss);
-		std::wcout << ss.str();
+		WinJournalLoggerImplV2::Register(Kernel::KeGetModuleFileName(nullptr), L"Bsv test provider");
 	}
 
 #ifdef _DEBUG

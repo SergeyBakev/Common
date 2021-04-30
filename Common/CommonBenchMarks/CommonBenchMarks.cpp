@@ -2,6 +2,10 @@
 #include "..\Common\Arrays\ke_farray_base.h"
 #include "..\Common\Algorithm\ke_algorithm.h"
 #include "..\Common\FormatedString.h"
+#include "..\Common\Logger\EventLogger\JournalLogger.h"
+#include "..\Common\Logger\EventLogger\WinLogReader.h"
+#include "..\Common\Logger\EventLogger\WinLogReaderV2.h"
+#include "..\Common\Logger\EventLogger\WinLogFilter.h"
 
 namespace BenchMarksFArray
 {
@@ -134,6 +138,7 @@ Common::FormattedStringV2 f3;
 double toDouble(const std::wstring& v) { return std::stod(v); }
 
 constexpr size_t ITER = 1000000;
+
 namespace STLBenchMarks
 {
 	std::wstring str1 = L"545.387";
@@ -226,8 +231,8 @@ namespace STLBenchMarks
 	}
 	//BENCHMARK(Convert_String_To_Double_IStringStream_In_Consructor)->Arg(ITER);
 	//BENCHMARK(Convert_String_To_Double_IOStringStream_In_Consructor)->Arg(ITER);
-	BENCHMARK(Convert_String_To_Double_IOStringStream_In_Stream_Operator)->Arg(ITER);
-	BENCHMARK(Convert_String_To_Double_IOStringStream_In_Stream_Operator_In_Callable_Object)->Arg(ITER);
+	//BENCHMARK(Convert_String_To_Double_IOStringStream_In_Stream_Operator)->Arg(ITER);
+	//BENCHMARK(Convert_String_To_Double_IOStringStream_In_Stream_Operator_In_Callable_Object)->Arg(ITER);
 	//BENCHMARK(Pass_String_By_String_View)->Arg(ITER);
 	//BENCHMARK(Pass_String_By_Const_Ref)->Arg(ITER);
 	//BENCHMARK(Convert_String_To_Double_STOD)->Arg(ITER);
@@ -285,11 +290,46 @@ namespace FormatedStringBanchMark
 	//BENCHMARK(ConvertToString)->Arg(ITER);
 }
 
+namespace LoggerBenchmarks
+{
+	using namespace Common;
+
+	static inline std::wstring providerName = L"CommonTests EventLoggerTests";
+
+	ILogReaderPtr readerV1 = std::make_shared<WinLogReader>(providerName, GetModuleHandle(nullptr));
+	ILogReaderPtr readerV2 = std::make_shared<WinLogReaderV2>(providerName);
+	WinLogFilter filter;
+	
+	void InitializeState()
+	{
+		WinLogFilter filter;
+		filter.name = providerName;
+	}
+
+	void Read_From_Old_Reader(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto this_ = readerV1->Select(filter);
+			benchmark::DoNotOptimize(this_);
+		}
+	}
+
+	void Read_From_New_Reader(benchmark::State& state)
+	{
+		while (state.KeepRunning())
+		{
+			auto this_ = readerV2->Select(filter);
+			benchmark::DoNotOptimize(this_);
+		}
+	}
+
+	//BENCHMARK(Read_From_Old_Reader)->Arg(ITER);
+	BENCHMARK(Read_From_New_Reader)->Arg(ITER);
+}
 int main(int argc, char** argv)
 {
-	f1.Str(L"Tag2 = 45;Tag3 = 45;Tag = 45;");
-	f2.Str(L"Tag2 = 45;Tag3 = 45;Tag = 45;");
-	f3.Str(L"Tag2 = 45;Tag3 = 45;Tag = 45;");
+	LoggerBenchmarks::InitializeState();
 	//using namespace BenchMarksFArray;
 	//ar.SetObjectSize(sizeof(double));
 	//std::wstring file_name;

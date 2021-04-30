@@ -18,5 +18,13 @@
     <ClCompile Include="CPPTes6t.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WinJournalLoggerImplV2.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="WinJournalLoggerImplV2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

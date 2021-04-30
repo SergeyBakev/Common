@@ -264,3 +264,11 @@ int Kernel::DateTimeConverter::Compare(std::tm t1, std::tm t2)
 }
 //--------------------------------------------------------
 
+std::wstring Kernel::KeGetModuleFileName(HMODULE module)
+{
+	TCHAR exePath[_MAX_PATH] = { 0 };
+	::GetModuleFileName(module, exePath, _MAX_PATH);
+	return exePath;
+}
+
+

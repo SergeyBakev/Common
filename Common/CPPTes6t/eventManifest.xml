@@ -1,0 +1,30 @@
+<instrumentationManifest xmlns="http://schemas.microsoft.com/win/2004/08/events"   xmlns:win="https://manifests.microsoft.com/win/2004/08/windows/events" xmlns:xs="https://www.w3.org/2001/XMLSchema">
+<instrumentation>
+    <events>
+        <provider name ="Bsv test provider" guid ="{83d05ef7-50da-4ab8-9366-28379f379a9c}" resourceFileName ="D:\Common\Common\x64\Debug\CPPTes6t.exe" messageFileName ="D:\Common\Common\x64\Debug\CPPTes6t.exe" message ="$(string.Provider.Name)">
+    <channels>
+    <channel chid ="c1" name ="Bsv test provider/Admin" symbol ="CHANNEL_BASEPROVIDER_ADMIN" type ="Admin"/>
+    </channels>
+    <levels>
+        <level name ="NotValid" value ="1" symbol ="LEVEL_SAMPLEPROVIDER_NOTVALID" message ="$(string.Level.NotValid)"/>
+        <level name ="Valid" value ="2" symbol ="LEVEL_SAMPLEPROVIDER_VALID" message ="$(string.Level.Valid)"/>
+    </levels>
+    <tasks>
+        <task name ="Disconnect" value ="1" symbol ="TASK_DISCONNECT" message ="$(string.Level.Disconnect)"></task>
+        <task name ="Connect" value ="2" symbol ="TASK_CONNECT" message ="$(string.Level.Connect)"></task>
+    </tasks>
+        </provider>
+    </events>
+    <localization>
+        <resources culture ="en-US">
+            <stringTable>
+                <string id ="Provied.Name" value ="Bsv test provider"/>
+                <string id ="Level.Valid" value ="Valid"/>
+                <string id ="Level.NotValid" value ="Not Valid"/>
+                <string id ="Task.Disconnect" value ="Disconnect"/>
+                <string id ="Task.Connect" value ="Connect"/>
+            </stringTable>
+        </resources>
+    </localization>
+</instrumentation>
+</instrumentationManifest>

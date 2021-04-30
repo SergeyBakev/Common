@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <ctime>
+#include <Windows.h>
 std::wstring GetLastStringError();
 std::wstring GetMessageString(unsigned long resMessageId, unsigned long  argc, const wchar_t* argv, void* hModule = nullptr);
 
@@ -43,6 +44,8 @@ namespace Kernel
 		static int Compare(std::time_t t1, std::time_t t2);
 		static int Compare(std::tm t1, std::tm t2);
 	};
+
+	std::wstring KeGetModuleFileName(HMODULE module);
 }
 
 

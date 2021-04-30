@@ -126,6 +126,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\Lib\boost</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -144,18 +145,37 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\Lib\boost</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CommonBenchMarks.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="logMsg.mc">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mc.exe -U "$(ProjectDir)%(Filename).mc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mc.exe -U "$(ProjectDir)%(Filename).mc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">mc.exe -U "$(ProjectDir)%(Filename).mc"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">mc.exe -U "$(ProjectDir)%(Filename).mc"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)%(Filename).h;$(ProjectDir)%(Filename).rc</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)%(Filename).h;$(ProjectDir)%(Filename).rc</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)%(Filename).h;$(ProjectDir)%(Filename).rc</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)%(Filename).h;$(ProjectDir)%(Filename).rc</Outputs>
+    </CustomBuild>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
       <Project>{9e4d3e32-b2b3-43ce-acff-2671c78de9d6}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="logMsg.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CommonBenchMarks.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -59,7 +59,6 @@ namespace CommonTests
 			totalCount++;
 		}
 
-
 		static LogJournalProvider MakeProvider()
 		{
 			LogJournalProvider provider;
@@ -141,7 +140,7 @@ namespace CommonTests
 					unsigned short Type = (std::numeric_limits<unsigned short>::max)(),
 					unsigned short Category = (std::numeric_limits<unsigned short>::max)()
 				  >
-		void Select(size_t Expected)
+		void Select(size_t Expected, std::wstring prvName = providerName)
 		{
 			//arange
 			auto provider = MakeProvider();
@@ -149,7 +148,7 @@ namespace CommonTests
 			
 			//act
 			WinLogFilter filter;
-			filter.name = providerName;
+			filter.name = prvName;
 			filter.endTime = endTime;
 			filter.startTime = startTime;
 			filter.eventType = Type;
@@ -210,7 +209,17 @@ namespace CommonTests
 
 		TEST_METHOD(Select_All_Type_By_Rpc_Category)
 		{
-			Select<EVENTLOG_ERROR_TYPE | EVENTLOG_INFORMATION_TYPE | EVENTLOG_ERROR_TYPE, RPC_CATEGORY>(5);
+			Select<EVENTLOG_ERROR_TYPE | EVENTLOG_INFORMATION_TYPE | EVENTLOG_WARNING_TYPE, RPC_CATEGORY>(5);
+		}
+
+		TEST_METHOD(Select_By_Incorrect_Filter_Provider_Name)
+		{
+			Select(0, L"Incorrect");
+		}
+
+		TEST_METHOD(Select_By_No_Exist_Log_Type)
+		{
+			Select<24>(0);
 		}
 
 
