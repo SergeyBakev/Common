@@ -40,6 +40,9 @@
     <Filter Include="Logger\EventLogger\WinLoggerImpl">
       <UniqueIdentifier>{84852bca-41dd-433d-9e6a-761d07b8cc51}</UniqueIdentifier>
     </Filter>
+    <Filter Include="DataBase">
+      <UniqueIdentifier>{c88c1865-0a3d-4588-975a-2cd2276a3821}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -123,6 +126,18 @@
     <ClInclude Include="ke_def.h">
       <Filter>Helpers</Filter>
     </ClInclude>
+    <ClInclude Include="IRepository.h">
+      <Filter>DataBase</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorRepository.h">
+      <Filter>DataBase</Filter>
+    </ClInclude>
+    <ClInclude Include="repo_def.h">
+      <Filter>DataBase</Filter>
+    </ClInclude>
+    <ClInclude Include="_uuid_t.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common.cpp">
@@ -169,6 +184,12 @@
     </ClCompile>
     <ClCompile Include="Logger\EventLogger\DummyReader.cpp">
       <Filter>Logger\EventLogger\Generic</Filter>
+    </ClCompile>
+    <ClCompile Include="VectorRepository.cpp">
+      <Filter>DataBase</Filter>
+    </ClCompile>
+    <ClCompile Include="_uuid_t.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

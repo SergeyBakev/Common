@@ -180,6 +180,7 @@
     <ClInclude Include="Helpers\DoubleHelper.h" />
     <ClInclude Include="Helpers\ke_kernel.h" />
     <ClInclude Include="Helpers\StringHelper.h" />
+    <ClInclude Include="IRepository.h" />
     <ClInclude Include="ke_def.h" />
     <ClInclude Include="ke_type_traits.h" />
     <ClInclude Include="Logger\EventLogger\DummyReader.h" />
@@ -197,6 +198,9 @@
     <ClInclude Include="Logger\EventLogger\WinLogReaderV2.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Process.h" />
+    <ClInclude Include="repo_def.h" />
+    <ClInclude Include="VectorRepository.h" />
+    <ClInclude Include="_uuid_t.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Algorithm\ke_algorithm.cpp" />
@@ -219,6 +223,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Process.cpp" />
+    <ClCompile Include="VectorRepository.cpp" />
+    <ClCompile Include="_uuid_t.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

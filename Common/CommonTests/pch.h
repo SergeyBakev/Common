@@ -23,6 +23,9 @@
 #include "..\Common\Logger\EventLogger\WinLogReaderV2.h"
 #include "..\Common\Logger\EventLogger\WinLogFilter.h"
 #include "..\Common\Logger\EventLogger\DummyReader.h"
-
+#include "..\Common\VectorRepository.h"
+#include "..\Common\repo_def.h"
+#include "..\Common\_uuid_t.h"
+#include <array>
 using DoubleVector = std::vector<double>;
 #endif //PCH_H
